@@ -14,6 +14,9 @@ data InfTerm = Ann UnInfTerm UnInfTerm
              | Var Int -- De Bruijn sadness
              | Par Name -- Free variables, name from simple easy!
              | InfTerm :@: UnInfTerm
+             | Zero
+             | Succ UnInfTerm
+             | Nat
              deriving (Eq, Show)
 
 
@@ -26,5 +29,8 @@ data Neutral = NPar Name
 
 data Value = VLam (Value -> Value)
            | VStar
+           | VNat
            | VPi Value (Value -> Value)
            | VNeutral Neutral
+           | VZero
+           | VSucc Value

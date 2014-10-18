@@ -12,6 +12,9 @@ type FreshCounter = Int
 typeInf :: FreshCounter -> Context -> InfTerm -> Maybe Type
 typeInf i cxt = go
   where go Star = Just VStar
+        go Nat = Just VStar
+        go Zero = Just VNat
+        go (Succ e) = typeUnInf i cxt e VNat >> return VNat
         go (Var j) = M.lookup (Bound j) cxt
         go (Par n) = M.lookup n cxt
         go (Ann un ty) = do
