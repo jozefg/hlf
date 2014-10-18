@@ -1,33 +1,42 @@
 module Language.HLF.TC where
-import qualified Data.Map as M
+import           Control.Monad
+import qualified Data.Map          as M
 import           Language.HLF.AST
+import           Language.HLF.Eval
 
 type Context = M.Map Name Type
-type Env = [Value]
+type FreshCounter = Int
 
-evalInf :: InfTerm -> Env -> Value
-evalInf (Ann term _) env = evalUnInf term env
-evalInf (Par n) _ = VNeutral (NPar n)
-evalInf (Pi l r) env = VPi (evalUnInf l env) $ \v -> evalUnInf r (v : env)
-evalInf (Var i) env = env !! i
-evalInf (l :@: r) env = case evalInf l env of
-  VLam f -> f (evalUnInf r env)
-  VNeutral n -> VNeutral (NApp n $ evalUnInf r env)
-  _ -> error "This is your fault not mine."
-evalInf Star _ = VStar
+typeInf :: FreshCounter -> Context -> InfTerm -> Maybe Type
+typeInf i cxt = go
+  where go (Ann un ty) = do
+          let v = evalUnInf ty []
+          typeUnInf i cxt ty VStar
+          typeUnInf i cxt un v
+          return v
+        go Star = Just VStar
+        go (Var j) = M.lookup (Bound j) cxt
+        go (Par n) = M.lookup n cxt
+        go (f :@: a) =
+          case typeInf i cxt f of
+           Just (VPi ty retTy) ->
+             typeUnInf i cxt a ty >> return (retTy $ evalUnInf a [])
+           _ -> error "This is your fault not mine."
+        go (Pi ty body) = do
+          let val = evalUnInf ty []
+              cxt' = M.insert (Bound i) val cxt
+              body' = substUnInf 0 (Par . Bound $ i) body
+          typeUnInf i cxt ty VStar
+          typeUnInf (i + 1) cxt' body' VStar
+          return VStar
 
-evalUnInf :: UnInfTerm -> Env -> Value
-evalUnInf (Inf i) env = evalInf i env
-evalUnInf (Lam body) env = VLam $ \v -> evalUnInf body (v : env)
 
-quote :: Value -> UnInfTerm
-quote = go 0
-  where go i (VLam f) = go (i + 1) $ f (VNeutral . NPar . Unquoted $ i)
-        go i VStar = Inf Star
-        go i (VNeutral n) = Inf $ unNeutral i n
-        go i (VPi t f) = Inf
-                         . Pi (go i t)
-                         . go (i + 1)
-                         $ f (VNeutral . NPar . Unquoted $ i)
-        unNeutral i (NPar n)   = Par n
-        unNeutral i (NApp l r) = unNeutral i l :@: go i r
+typeUnInf :: FreshCounter -> Context -> UnInfTerm -> Type -> Maybe ()
+typeUnInf i cxt (Lam unInf) (VPi ty retTy) =
+  let cxt' = M.insert (Bound i) ty cxt
+      unInf' = substUnInf i (Par $ Bound i) unInf
+  in typeUnInf i cxt' unInf' (retTy . VNeutral . NPar . Bound $ i)
+typeUnInf i cxt (Inf term) t = do
+  t' <- typeInf i cxt term
+  guard (quote t' == quote t)
+typeUnInf _ _ _ _ = Nothing
