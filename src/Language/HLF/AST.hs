@@ -4,12 +4,12 @@ data Name = Const String
           | Bound Int
           | Unquoted Int
 
-type Type = InfTerm
+type Type = Value
 
 -- | Terms which we can infer types for.
 data InfTerm = Ann UnInfTerm Type
              | Star -- Kind of types
-             | Pi InfTerm InfTerm
+             | Pi UnInfTerm UnInfTerm
              | Var Int -- De Bruijn sadness
              | Par Name -- Free variables, name from simple easy!
              | InfTerm :@: UnInfTerm
