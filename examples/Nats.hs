@@ -4,10 +4,9 @@ import Language.HLF
 
 program :: Program
 program = Env [ "Nat" := Star
-              , "S"   := piTy "Nat" "" "Nat"
+              , "S"   := "Nat" --> "Nat"
               , "Z"   := "Nat"
-              , "plus" :=
-                piMany [("Nat", ""), ("Nat", ""), ("Nat", "")] Star
+              , "plus" := "Nat" --> "Nat" --> "Nat"
               , "plusZ" := piTy "Nat" "N" ("plus" :@: "Z" :@: "N" :@: "N")
               , "plusS" :=
                 piMany [("Nat", "N"), ("Nat", "M"), ("Nat", "O")]
