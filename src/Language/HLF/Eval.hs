@@ -10,9 +10,6 @@ whnf Star = Star
 whnf (Pi ty body) = Pi ty body
 whnf (Lam l ty) = Lam l ty
 whnf (Var v) = Var v
-whnf Zero = Zero
-whnf (Succ a) = Succ a
-whnf Nat = Nat
 
 nfBound :: Scope () Term a -> Scope () Term a
 nfBound = toScope . nf . fromScope
@@ -25,6 +22,3 @@ nf Star = Star
 nf (Pi ty body) = Pi (nf ty) (nfBound body)
 nf (Lam l ty) = Lam (nfBound l) (nf ty)
 nf (Var v) = Var v
-nf Zero = Zero
-nf (Succ a) = Succ (nf a)
-nf Nat = Nat

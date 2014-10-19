@@ -12,9 +12,6 @@ data Term a = Star -- Kind of types
             | Lam (Scope () Term a) (Term a)
             | Var a
             | Term a :@: Term a
-            | Zero
-            | Succ (Term a)
-            | Nat
             deriving (Eq, Show, Functor, Foldable, Traversable)
 instance Show1 Term
 instance Eq1 Term
@@ -28,9 +25,6 @@ instance Monad Term where
   Pi ty body >>= f = Pi (ty >>= f) (body >>>= f)
   Var a >>= f = f a
   (fun :@: a) >>= f = (fun >>= f) :@: (a >>= f)
-  Zero >>= _ = Zero
-  Succ a >>= f = Succ (a >>= f)
-  Nat >>= _ = Nat
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
 
 lam :: Eq a => a -> Term a -> Term a -> Term a

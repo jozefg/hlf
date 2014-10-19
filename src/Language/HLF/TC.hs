@@ -17,9 +17,6 @@ unBind i sc = instantiate1 (Var i) sc
 typeTerm :: Fresh -> Context -> Term Fresh -> Maybe (Term Fresh)
 typeTerm i cxt t = case t of
   Star -> Just Star
-  Nat -> Just Star
-  Zero -> Just Nat
-  Succ e -> assert [checkTerm i cxt e Nat] Nat
   Var j -> M.lookup j cxt
   Lam body argTy ->
     let cxt' = M.insert i argTy cxt
