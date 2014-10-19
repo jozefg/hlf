@@ -12,7 +12,7 @@ import           Prelude.Extras
 
 data Term a = Star
             | Pi (Term a) (Scope () Term a)
-            | When (Term a) (Term a) -- A reversed, non-dependent Pi type
+            | When (Term a) (Term a) -- See note 1
             | Lam (Scope () Term a) (Term a)
             | Var a
             | Term a :@: Term a
@@ -56,3 +56,8 @@ infixl 0 <--
 (-->) :: Term a -> Term a -> Term a
 l --> r = Pi l (abstract (const Nothing) r)
 infixr 0 -->
+
+-- Note 1: This actually needs its own data constructor. The moded
+-- checker (when it actually exists) will work from top to bottom so
+-- this critically affects the modality of variables. This isn't true
+-- of a forwards arrow which is just a degerenerate pi type.
