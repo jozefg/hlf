@@ -52,3 +52,7 @@ piMany vars body = Data.Foldable.foldr (uncurry piTy) body vars
 (<--) :: Term a -> Term a -> Term a
 (<--) = When
 infixl 0 <--
+
+(-->) :: Term a -> Term a -> Term a
+l --> r = Pi l (abstract (const Nothing) r)
+infixr 0 -->
