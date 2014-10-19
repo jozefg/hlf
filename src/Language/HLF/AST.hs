@@ -10,8 +10,9 @@ import           Data.Traversable
 import           Prelude.Extras
 
 
-data Term a = Star -- Kind of types
+data Term a = Star
             | Pi (Term a) (Scope () Term a)
+            | When (Term a) (Term a) -- A reversed, non-dependent Pi type
             | Lam (Scope () Term a) (Term a)
             | Var a
             | Term a :@: Term a
@@ -29,6 +30,7 @@ instance Monad Term where
   return = Var
   Star >>= _ = Star
   Pi ty body >>= f = Pi (ty >>= f) (body >>>= f)
+  When r l >>= f = When (r >>= f) (l >>= f)
   Var a >>= f = f a
   (fun :@: a) >>= f = (fun >>= f) :@: (a >>= f)
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
@@ -46,3 +48,7 @@ piTy ty a f = Pi ty (abstract1 a f)
 
 piMany :: Eq a => [(Term a, a)] -> Term a -> Term a
 piMany vars body = Data.Foldable.foldr (uncurry piTy) body vars
+
+(<--) :: Term a -> Term a -> Term a
+(<--) = When
+infixl 0 <--

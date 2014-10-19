@@ -23,13 +23,17 @@ typeTerm i cxt t = case t of
   f :@: a ->
     case typeTerm i cxt f of
      Just (Pi ty retTy) ->
-       assert [checkTerm i cxt a ty] (instantiate1 (nf a) retTy)
+       assert [checkTerm i cxt a (nf ty)] (instantiate1 (nf a) retTy)
+     Just (When r l) ->
+       assert [checkTerm i cxt a (nf l)] (nf r)
      _ -> Nothing
   Pi ty body ->
     let val = nf ty
         cxt' = M.insert (Unbound i) val cxt
     in assert [ checkTerm i cxt ty Star
               , checkTerm (i + 1) cxt' (unBind i body) Star] Star
+  When r l -> assert [checkTerm i cxt (nf l) Star, checkTerm i cxt (nf r) Star]
+              Star
 
 checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> Maybe ()
 checkTerm i cxt term ty = do

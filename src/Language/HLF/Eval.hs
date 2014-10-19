@@ -8,6 +8,7 @@ whnf (f :@: a) = case whnf f of
   f' -> f' :@: a
 whnf Star = Star
 whnf (Pi ty body) = Pi ty body
+whnf (When r l) = When r l
 whnf (Lam l ty) = Lam l ty
 whnf (Var v) = Var v
 
@@ -20,5 +21,6 @@ nf (f :@: a) = case nf f of
   f' -> nf f' :@: nf a
 nf Star = Star
 nf (Pi ty body) = Pi (nf ty) (nfBound body)
+nf (When r l) = When (nf r) (nf l)
 nf (Lam l ty) = Lam (nfBound l) (nf ty)
 nf (Var v) = Var v
