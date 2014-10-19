@@ -11,6 +11,8 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Language.HLF
                      , Language.HLF.AST
+                     , Language.HLF.Env
+                     , Language.HLF.TC
   build-depends:       base ==4.*
                      , bound
                      , containers >= 0.5
