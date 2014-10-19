@@ -43,3 +43,6 @@ lam a f = Lam (abstract1 a f)
 
 piTy :: Eq a => Term a -> a -> Term a -> Term a
 piTy ty a f = Pi ty (abstract1 a f)
+
+piMany :: Eq a => [(Term a, a)] -> Term a -> Term a
+piMany vars body = Data.Foldable.foldr (uncurry piTy) body vars
