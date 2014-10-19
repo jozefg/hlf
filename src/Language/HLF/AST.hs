@@ -14,8 +14,7 @@ newtype FreeVar = FreeVar Int
 instance Show FreeVar where
   show (FreeVar i) = 'x' : show i
 
-data Term a = Ann (Term a) (Term a)
-            | Star -- Kind of types
+data Term a = Star -- Kind of types
             | Pi (Term a) (Scope FreeVar Term a)
             | Lam (Scope FreeVar Term a) (Term a)
             | Var a
@@ -32,7 +31,6 @@ instance Applicative Term where
   (<*>) = ap
 instance Monad Term where
   return = Var
-  Ann ty scope >>= f = Ann (ty >>= f) (scope >>= f)
   Star >>= _ = Star
   Pi ty body >>= f = Pi (ty >>= f) (body >>>= f)
   Var a >>= f = f a
