@@ -1,15 +1,14 @@
 module Language.HLF.TC where
 import           Bound
 import           Control.Monad (guard)
-import           Data.Foldable
+import qualified Data.Foldable     as T
 import qualified Data.Map          as M
 import           Data.Maybe
-import           Data.Monoid
 import           Language.HLF.AST
 import           Language.HLF.Eval
 
 assert :: [Maybe a] -> b -> Maybe b
-assert as b = Data.Foldable.sequence_ as >> return b
+assert as b = T.sequence_ as >> return b
 
 unBind :: Int -> Scope () Term Fresh -> Term Fresh
 unBind i sc = instantiate1 (Var (Unbound i)) sc
@@ -38,4 +37,4 @@ checkTerm i cxt term ty = do
   guard (nf ty' == nf ty)
 
 typeProgram :: Context -> Bool
-typeProgram cxt = getAll $ foldMap (All . isJust . typeTerm 0 cxt) cxt
+typeProgram cxt = T.all (isJust . typeTerm 0 cxt) cxt
