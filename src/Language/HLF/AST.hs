@@ -1,12 +1,14 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Language.HLF.AST where
-import Bound
-import Control.Applicative
-import Control.Monad       (ap)
-import Data.Foldable
-import qualified Data.Map as M
-import Data.Traversable
-import Prelude.Extras
+import           Bound
+import           Control.Applicative
+import           Control.Monad       (ap)
+import           Data.Foldable
+import qualified Data.Map            as M
+import           Data.String
+import           Data.Traversable
+import           Prelude.Extras
+
 
 data Term a = Star -- Kind of types
             | Pi (Term a) (Scope () Term a)
@@ -16,6 +18,9 @@ data Term a = Star -- Kind of types
             deriving (Eq, Show, Functor, Foldable, Traversable)
 instance Show1 Term
 instance Eq1 Term
+
+instance IsString a => IsString (Term a) where
+  fromString = Var . fromString
 
 instance Applicative Term where
   pure = Var
