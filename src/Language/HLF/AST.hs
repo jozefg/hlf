@@ -4,6 +4,7 @@ import Bound
 import Control.Applicative
 import Control.Monad       (ap)
 import Data.Foldable
+import qualified Data.Map as M
 import Data.Traversable
 import Prelude.Extras
 
@@ -26,6 +27,10 @@ instance Monad Term where
   Var a >>= f = f a
   (fun :@: a) >>= f = (fun >>= f) :@: (a >>= f)
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
+
+
+type Fresh = Int
+type Context = M.Map Fresh (Term Fresh)
 
 lam :: Eq a => a -> Term a -> Term a -> Term a
 lam a f = Lam (abstract1 a f)

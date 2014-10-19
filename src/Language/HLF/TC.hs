@@ -8,10 +8,6 @@ import           Data.Monoid
 import           Language.HLF.AST
 import           Language.HLF.Eval
 
-
-type Fresh = Int
-type Context = M.Map Fresh (Term Fresh)
-
 assert :: [Maybe a] -> b -> Maybe b
 assert as b = Data.Foldable.sequence_ as >> return b
 
@@ -44,5 +40,5 @@ checkTerm i cxt term ty = do
 typeChecks :: Context -> Term Fresh -> Bool
 typeChecks cxt term = isJust $ typeTerm 0 cxt term
 
-typeProgram :: M.Map Int (Term Int)  -> Bool
+typeProgram :: Context -> Bool
 typeProgram cxt = getAll $ foldMap (All . typeChecks cxt) cxt
