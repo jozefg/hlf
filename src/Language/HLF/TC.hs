@@ -8,12 +8,15 @@ import           Language.HLF.Eval
 type Fresh = Int
 type Context = M.Map Int (Term Fresh)
 
+assert :: [Maybe a] -> b -> Maybe b
+assert as b = sequence_ as >> return b
+
 typeTerm :: Fresh -> Context -> Term Fresh -> Maybe (Term Fresh)
 typeTerm i cxt t = case t of
   Star -> Just Star
   Nat -> Just Star
   Zero -> Just Nat
-  Succ e -> checkTerm i cxt e Nat >> return Nat
+  Succ e -> assert [checkTerm i cxt e Nat] Nat
   Var j -> M.lookup j cxt
   Lam body argTy ->
     let cxt' = M.insert i argTy cxt
@@ -22,15 +25,14 @@ typeTerm i cxt t = case t of
   f :@: a ->
     case typeTerm i cxt f of
      Just (Pi ty retTy) ->
-       checkTerm i cxt a ty >> return (instantiate1 (nf a) retTy)
+       assert [checkTerm i cxt a ty] (instantiate1 (nf a) retTy)
      _ -> Nothing
-  Pi ty body -> do
+  Pi ty body ->
     let val = nf ty
         cxt' = M.insert i val cxt
         body' = instantiate1 (Var i) body
-    checkTerm i cxt ty Star
-    checkTerm (i + 1) cxt' body' Star
-    return Star
+    in assert [ checkTerm i cxt ty Star
+              , checkTerm (i + 1) cxt' body' Star] Star
 
 checkTerm :: Fresh -> Context -> Term Fresh -> Term Fresh -> Maybe ()
 checkTerm i cxt term ty = do
