@@ -2,7 +2,6 @@ module Language.HLF.TC where
 import           Bound
 import           Control.Monad
 import qualified Data.Map          as M
-import           Data.Maybe
 import           Language.HLF.AST
 import           Language.HLF.Eval
 
@@ -16,6 +15,10 @@ typeTerm i cxt = go
         go Zero = Just Nat
         go (Succ e) = checkTerm i cxt e Nat >> return Nat
         go (Var j) = M.lookup j cxt
+        go (Lam body argTy) =
+          let cxt' = M.insert i argTy cxt
+              body' = instantiate1 (Var i) body
+          in typeTerm (i + 1) cxt' body'
         go (f :@: a) =
           case typeTerm i cxt f of
            Just (Pi ty retTy) ->
@@ -28,12 +31,12 @@ typeTerm i cxt = go
           checkTerm i cxt ty Star
           checkTerm (i + 1) cxt' body' Star
           return Star
-        go (Lam body argTy) =
-          let cxt' = M.insert i argTy cxt
-              body' = instantiate1 (Var i) body
-          in typeTerm (i + 1) cxt' body'
 
 checkTerm :: Fresh -> Context -> Term Fresh -> Term Fresh -> Maybe ()
 checkTerm i cxt term ty = do
   ty' <- typeTerm i cxt term
   guard (nf ty' == nf ty)
+
+
+typeOf :: Term Fresh -> Maybe (Term Fresh)
+typeOf = typeTerm 0 M.empty
