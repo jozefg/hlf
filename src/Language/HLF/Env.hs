@@ -18,7 +18,7 @@ type Program = Env Name
 
 bindEnv :: Program -> Maybe Context
 bindEnv (Env env) = foldr bindTy (Just M.empty) env
-  where nameMap = M.fromList $ zip (map defName env) [0..]
+  where nameMap = M.fromList $ zip (map defName env) (map Free [0..])
         bindTy (name := ty) tyMap =
           let name' = nameMap M.! name
               ty' = traverse (flip M.lookup nameMap) ty

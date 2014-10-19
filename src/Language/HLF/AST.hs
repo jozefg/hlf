@@ -29,7 +29,8 @@ instance Monad Term where
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
 
 
-type Fresh = Int
+data Fresh = Free Int | Unbound Int
+           deriving(Eq, Show, Ord)
 type Context = M.Map Fresh (Term Fresh)
 
 lam :: Eq a => a -> Term a -> Term a -> Term a

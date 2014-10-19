@@ -8,8 +8,3 @@ import Language.HLF.TC
 
 typeCheck :: Program -> Bool
 typeCheck = maybe False typeProgram . bindEnv
-
-test :: Program
-test = Env [ "Nat" := Star
-           , "Z"   := Var "Nat"
-           , "S"   := piTy (Var "Nat") "" (Var "Nat") ]
