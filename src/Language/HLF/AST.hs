@@ -1,36 +1,43 @@
-module Language.HLF.AST where
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module Language.HLF.AST (FreeVar, Term(..)) where
+import Bound
+import Control.Applicative
+import Control.Monad       (ap)
+import Data.Foldable
+import Data.Traversable
+import Prelude.Extras
 
-data Name = Const String
-          | Bound Int
-          | Unquoted Int
-          deriving (Eq, Ord, Show)
+newtype FreeVar = FreeVar Int
+                deriving (Eq, Ord, Enum)
 
-type Type = Value
+instance Show FreeVar where
+  show (FreeVar i) = 'x' : show i
 
--- | Terms which we can infer types for.
-data InfTerm = Ann UnInfTerm UnInfTerm
-             | Star -- Kind of types
-             | Pi UnInfTerm UnInfTerm
-             | Var Int -- De Bruijn sadness
-             | Par Name -- Free variables, name from simple easy!
-             | InfTerm :@: UnInfTerm
-             | Zero
-             | Succ UnInfTerm
-             | Nat
-             deriving (Eq, Show)
+data Term a = Ann (Term a) (Term a)
+            | Star -- Kind of types
+            | Pi (Term a) (Scope FreeVar Term a)
+            | Lam (Scope FreeVar Term a) (Term a)
+            | Var a
+            | Term a :@: (Term a)
+            | Zero
+            | Succ (Term a)
+            | Nat
+            deriving (Eq, Show, Functor, Foldable, Traversable)
+instance Show1 Term
+instance Eq1 Term
 
-
-data UnInfTerm = Inf InfTerm
-               | Lam UnInfTerm
-               deriving (Eq, Show)
-
-data Neutral = NPar Name
-             | NApp Neutral Value
-
-data Value = VLam (Value -> Value)
-           | VStar
-           | VNat
-           | VPi Value (Value -> Value)
-           | VNeutral Neutral
-           | VZero
-           | VSucc Value
+instance Applicative Term where
+  pure = Var
+  (<*>) = ap
+instance Monad Term where
+  return = Var
+  Ann ty scope >>= f = Ann (ty >>= f) (scope >>= f)
+  Star >>= _ = Star
+  Pi ty body >>= f = Pi (ty >>= f) (body >>>= f)
+  Var a >>= f = f a
+  (fun :@: a) >>= f = (fun >>= f) :@: (a >>= f)
+  Zero >>= _ = Zero
+  Succ a >>= f = Succ (a >>= f)
+  Nat >>= _ = Nat
+  Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
