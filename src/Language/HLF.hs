@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Language.HLF ( typeCheck
                     , module Language.HLF.AST
                     , module Language.HLF.Env ) where
