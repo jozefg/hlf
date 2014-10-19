@@ -11,6 +11,9 @@ type Context = M.Map Int (Term Fresh)
 assert :: [Maybe a] -> b -> Maybe b
 assert as b = sequence_ as >> return b
 
+unBind :: Fresh -> Scope () Term Fresh -> Term Fresh
+unBind i sc = instantiate1 (Var i) sc
+
 typeTerm :: Fresh -> Context -> Term Fresh -> Maybe (Term Fresh)
 typeTerm i cxt t = case t of
   Star -> Just Star
@@ -20,8 +23,7 @@ typeTerm i cxt t = case t of
   Var j -> M.lookup j cxt
   Lam body argTy ->
     let cxt' = M.insert i argTy cxt
-        body' = instantiate1 (Var i) body
-    in typeTerm (i + 1) cxt' body'
+    in typeTerm (i + 1) cxt' (unBind i body)
   f :@: a ->
     case typeTerm i cxt f of
      Just (Pi ty retTy) ->
@@ -30,9 +32,8 @@ typeTerm i cxt t = case t of
   Pi ty body ->
     let val = nf ty
         cxt' = M.insert i val cxt
-        body' = instantiate1 (Var i) body
     in assert [ checkTerm i cxt ty Star
-              , checkTerm (i + 1) cxt' body' Star] Star
+              , checkTerm (i + 1) cxt' (unBind i body) Star] Star
 
 checkTerm :: Fresh -> Context -> Term Fresh -> Term Fresh -> Maybe ()
 checkTerm i cxt term ty = do

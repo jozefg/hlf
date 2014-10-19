@@ -11,7 +11,7 @@ data Term a = Star -- Kind of types
             | Pi (Term a) (Scope () Term a)
             | Lam (Scope () Term a) (Term a)
             | Var a
-            | Term a :@: (Term a)
+            | Term a :@: Term a
             | Zero
             | Succ (Term a)
             | Nat
