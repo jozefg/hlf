@@ -20,7 +20,7 @@ typeTerm i cxt t = case t of
   Var j -> M.lookup j cxt
   Lam body argTy ->
     let cxt' = M.insert i argTy cxt
-    in typeTerm (i + 1) cxt' (unBind i body)
+    in typeTerm (i - 1) cxt' (unBind i body)
   f :@: a ->
     case typeTerm i cxt f of
      Just (Pi ty retTy) ->
@@ -30,15 +30,12 @@ typeTerm i cxt t = case t of
     let val = nf ty
         cxt' = M.insert i val cxt
     in assert [ checkTerm i cxt ty Star
-              , checkTerm (i + 1) cxt' (unBind i body) Star] Star
+              , checkTerm (i - 1) cxt' (unBind i body) Star] Star
 
 checkTerm :: Fresh -> Context -> Term Fresh -> Term Fresh -> Maybe ()
 checkTerm i cxt term ty = do
   ty' <- typeTerm i cxt term
   guard (nf ty' == nf ty)
 
-typeChecks :: Context -> Term Fresh -> Bool
-typeChecks cxt term = isJust $ typeTerm 0 cxt term
-
 typeProgram :: Context -> Bool
-typeProgram cxt = getAll $ foldMap (All . typeChecks cxt) cxt
+typeProgram cxt = getAll $ foldMap (All . isJust . typeTerm (-1) cxt) cxt
