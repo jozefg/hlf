@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Language.HLF.Constants where
+module Language.HLF.Env where
 import qualified Data.Map         as M
 import           Data.Monoid
 import qualified Data.Text        as T
