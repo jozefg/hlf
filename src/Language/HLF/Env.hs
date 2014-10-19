@@ -11,6 +11,7 @@ type Name = T.Text
 data Definition a = (:=) { defName :: Name
                          , defTy   :: Term Name }
                   deriving(Show)
+infixr 0 :=
 
 newtype Env a = Env {unEnv :: [Definition a]}
               deriving(Monoid)
