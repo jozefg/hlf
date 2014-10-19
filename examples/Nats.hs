@@ -11,5 +11,5 @@ program = Env [ "Nat" := Star
               , "plusZ" := piTy "Nat" "N" ("plus" :@: "Z" :@: "N" :@: "N")
               , "plusS" :=
                 piMany [("Nat", "N"), ("Nat", "M"), ("Nat", "O")]
-                (piTy ("plus":@:"N":@:"M":@:"O") ""
-                 ("plus":@:("S":@:"N"):@:"M":@:("S":@:"O")))]
+                ("plus":@:"N":@:"M":@:"O"
+                 <-- "plus":@:("S":@:"N"):@:"M":@:("S":@:"O"))]
