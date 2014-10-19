@@ -6,7 +6,7 @@ import           Language.HLF.AST
 import           Language.HLF.Eval
 
 type Fresh = Int
-type Context = M.Map Int (Term Fresh)
+type Context = M.Map Fresh (Term Fresh)
 
 assert :: [Maybe a] -> b -> Maybe b
 assert as b = sequence_ as >> return b
