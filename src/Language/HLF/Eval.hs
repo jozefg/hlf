@@ -14,12 +14,12 @@ whnf Zero = Zero
 whnf (Succ a) = Succ a
 whnf Nat = Nat
 
-nfBound :: Scope FreeVar Term a -> Scope FreeVar Term a
+nfBound :: Scope () Term a -> Scope () Term a
 nfBound = toScope . nf . fromScope
 
 nf :: Term a -> Term a
 nf (f :@: a) = case nf f of
-  Lam f' _ -> nf (instantiate1 a f')
+  Lam f' _ -> nf (instantiate1 (nf a) f')
   f' -> nf f' :@: nf a
 nf Star = Star
 nf (Pi ty body) = Pi (nf ty) (nfBound body)

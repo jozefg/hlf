@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Language.HLF.AST (FreeVar, Term(..)) where
+module Language.HLF.AST where
 import Bound
 import Control.Applicative
 import Control.Monad       (ap)
@@ -8,15 +7,9 @@ import Data.Foldable
 import Data.Traversable
 import Prelude.Extras
 
-newtype FreeVar = FreeVar Int
-                deriving (Eq, Ord, Enum)
-
-instance Show FreeVar where
-  show (FreeVar i) = 'x' : show i
-
 data Term a = Star -- Kind of types
-            | Pi (Term a) (Scope FreeVar Term a)
-            | Lam (Scope FreeVar Term a) (Term a)
+            | Pi (Term a) (Scope () Term a)
+            | Lam (Scope () Term a) (Term a)
             | Var a
             | Term a :@: (Term a)
             | Zero
@@ -39,3 +32,9 @@ instance Monad Term where
   Succ a >>= f = Succ (a >>= f)
   Nat >>= _ = Nat
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
+
+lam :: Eq a => a -> Term a -> Term a -> Term a
+lam a f = Lam (abstract1 a f)
+
+piTy :: Eq a => Term a -> a -> Term a -> Term a
+piTy ty a f = Pi ty (abstract1 a f)
