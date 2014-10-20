@@ -41,9 +41,7 @@ hlfError :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
 hlfError wrong = (HLFError wrong `fmap` ask) >>= throwError
 
 impossible :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
-            => T.Text -> m (Maybe a) -> m a
-impossible msg action = do
-  may <- action
-  case may of
-   Nothing -> hlfError (Impossible msg)
-   Just a -> return a
+            => T.Text -> Maybe a -> m a
+impossible msg may = case may of
+                      Nothing -> hlfError (Impossible msg)
+                      Just a -> return a
