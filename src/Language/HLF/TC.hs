@@ -14,7 +14,8 @@ import           Language.HLF.Eval
 
 type NameMap = M.Map Fresh Name
 data TypeInfo = TypeInfo { _nameMap  :: NameMap
-                         , _errorCxt :: ErrorContext }
+                         , _errorCxt :: ErrorContext
+                         , _context  :: Context }
 makeLenses ''TypeInfo
 
 type TyM = ReaderT TypeInfo ErrorM
@@ -66,8 +67,7 @@ typeTerm i cxt t = do
        assert [ isType i cxt ty
               , isType (i + 1) (bind i (nf ty) cxt) (unBind i body)]
        Star
-     When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r]
-                 Star
+     When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r] Star
 
 checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> TyM ()
 checkTerm i cxt term ty = do
@@ -82,7 +82,7 @@ typeProgram :: NameMap -> Context -> ErrorM ()
 typeProgram nms cxt = flip runReaderT info
                       . void
                       $ itraverse typeName cxt
-  where info = TypeInfo nms $ ErrorContext TypeChecking Nothing Nothing
+  where info = TypeInfo nms (ErrorContext TypeChecking Nothing Nothing) cxt
         typeName i term = do
           n <- nameFor i
           local (errorCxt . termName .~ Just n) $
