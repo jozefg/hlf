@@ -20,7 +20,7 @@ newtype Env a = Env {unEnv :: [Definition a]}
               deriving(Monoid)
 type Program = Env Name
 
-lookupName :: Monad m => Name -> M.Map Name Fresh -> ErrorM m Fresh
+lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name map = case M.lookup name map of
   Just i -> return i
   Nothing -> hlfError (EnvError $ UnboundName name)
@@ -28,7 +28,7 @@ lookupName name map = case M.lookup name map of
 flipAList :: [(a, b)] -> [(b, a)]
 flipAList = map $ \(a, b) -> (b, a)
 
-bindEnv :: Monad m => Program -> ErrorM m (M.Map Fresh Name, Context)
+bindEnv :: Program -> ContextM (M.Map Fresh Name, Context)
 bindEnv (Env env) = (M.fromList $ flipAList names,)
                     <$> foldr bindTy (return M.empty) env
   where names = zip (map defName env) (map Free [0..])

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.HLF.Error where
 import           Control.Error
@@ -32,7 +33,9 @@ data HLFError = HLFError { errProblem :: WrongThing
                          , errContext :: ErrorContext }
               deriving Show
 
-type ErrorM m = ReaderT ErrorContext (EitherT HLFError m)
+type ErrorM m = EitherT HLFError m
+type ContextM = ErrorM (Reader ErrorContext)
 
-hlfError :: Monad m => WrongThing -> ErrorM m a
+hlfError :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
+            => WrongThing -> m a
 hlfError wrong = (HLFError wrong `fmap` ask) >>= throwError
