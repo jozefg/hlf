@@ -79,7 +79,6 @@ checkTerm i term ty = do
   ty' <- typeTerm i term
   when (nf ty' /= nf ty) $ typeError ty ty'
 
-
 isType :: Int -> Term Fresh -> TyM ()
 isType i ty = checkTerm i ty Star
 
