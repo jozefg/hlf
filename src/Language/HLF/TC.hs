@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverloadedStrings, LambdaCase #-}
+{-# LANGUAGE OverloadedStrings, LambdaCase, TemplateHaskell #-}
 module Language.HLF.TC where
 import           Bound
 import           Control.Applicative
@@ -32,24 +31,27 @@ unBind i sc = instantiate1 (Var (Unbound i)) sc
 bind :: Int -> Term Fresh -> Context -> Context
 bind = M.insert . Unbound
 
+nameFor :: Fresh -> TyM Name
+nameFor i = view (nameMap . at i) >>= \case
+  Just name -> return name
+  Nothing -> magnify errorCxt
+             . hlfError
+             . Impossible
+             $ "Found unknown symbol " <> Te.pack (show i)
+
 lookupVar :: Fresh -> Context -> TyM (Term Fresh)
-lookupVar i cxt = do
-  Just name <- view (nameMap . at i)
+lookupVar i cxt =
   case M.lookup i cxt of
    Just ty -> return ty
-   Nothing -> magnify errorCxt
+   Nothing -> do
+     name <- nameFor i
+     magnify errorCxt
               . hlfError
               . Impossible
-              $ "Found unbound name " <> name
+              $ "Found unbound symbol " <> name
 
 addNames :: Term Fresh -> TyM (Term Name)
-addNames = traverse $
-           \i -> view (nameMap . at i) >>= \case
-             Just name -> return name
-             Nothing -> magnify errorCxt
-                        . hlfError
-                        . Impossible
-                        $ "Found unbound symbol " <> Te.pack (show i)
+addNames = traverse nameFor
 
 typeError :: Term Fresh -> Term Fresh -> TyM a
 typeError l r = do
