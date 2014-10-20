@@ -1,9 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Language.HLF.Error where
 import           Control.Error
+import           Control.Lens
 import           Control.Monad.Error
 import           Control.Monad.Reader
 import qualified Data.Text            as T
 import           Language.HLF.AST
+
 
 data WrongThing = TypeError TypeError
                 | EnvError EnvError
@@ -19,10 +22,11 @@ data Phase = EnvironmentChecking
            | TypeChecking
            deriving Show
 
-data ErrorContext = ErrorContext { phase :: Phase
-                                 , termName :: Name
-                                 , termExpr :: Term Name }
+data ErrorContext = ErrorContext { _phase :: Phase
+                                 , _termName :: Name
+                                 , _termExpr :: Term Name }
                   deriving Show
+makeLenses ''ErrorContext
 
 data HLFError = HLFError { errProblem :: WrongThing
                          , errContext :: ErrorContext }
