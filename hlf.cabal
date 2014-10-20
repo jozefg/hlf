@@ -16,8 +16,9 @@ library
   build-depends:       base ==4.*
                      , bound
                      , containers >= 0.5
+                     , errors
+                     , mtl >= 2.1
                      , prelude-extras >= 0.4
                      , text >= 1.0.0.0
-                     , errors
   hs-source-dirs:      src
   default-language:    Haskell2010

@@ -1,5 +1,8 @@
 module Language.HLF.Error where
-import qualified Data.Text        as T
+import           Control.Error
+import           Control.Monad.Error
+import           Control.Monad.Reader
+import qualified Data.Text            as T
 import           Language.HLF.AST
 
 data WrongThing = TypeError TypeError
@@ -22,6 +25,10 @@ data ErrorContext = ErrorContext { phase :: Phase
                   deriving Show
 
 data HLFError = HLFError { errProblem :: WrongThing
-                         , errContext :: ErrorContext
-                         , errNotes   :: Maybe T.Text }
+                         , errContext :: ErrorContext }
               deriving Show
+
+type ErrorM m = ReaderT ErrorContext (EitherT HLFError m)
+
+hlfError :: Monad m => WrongThing -> ErrorM m a
+hlfError wrong = (HLFError wrong `fmap` ask) >>= throwError
