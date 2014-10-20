@@ -33,8 +33,8 @@ data HLFError = HLFError { errProblem :: WrongThing
                          , errContext :: ErrorContext }
               deriving Show
 
-type ErrorM m = EitherT HLFError m
-type ContextM = ErrorM (Reader ErrorContext)
+type ErrorM = Either HLFError
+type ContextM = ReaderT ErrorContext ErrorM
 
 hlfError :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
             => WrongThing -> m a

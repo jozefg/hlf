@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings, LambdaCase #-}
 module Language.HLF.TC where
 import           Bound
@@ -16,7 +17,11 @@ import           Language.HLF.Error
 import           Language.HLF.Eval
 
 type NameMap = M.Map Fresh Name
-type TyM = ErrorM (Reader NameMap)
+data TypeInfo = TypeInfo { _nameMap  :: NameMap
+                         , _errorCxt :: ErrorContext }
+makeLenses ''TypeInfo
+
+type TyM = ReaderT TypeInfo ErrorM
 
 assert :: [TyM a] -> b -> TyM b
 assert as b = F.sequence_ as >> return b
@@ -29,22 +34,32 @@ bind = M.insert . Unbound
 
 lookupVar :: Fresh -> Context -> TyM (Term Fresh)
 lookupVar i cxt = do
-  name <- lift $ asks (M.! i)
+  Just name <- view (nameMap . at i)
   case M.lookup i cxt of
    Just ty -> return ty
-   Nothing -> hlfError . Impossible $ "Found unbound name " <> name
+   Nothing -> magnify errorCxt
+              . hlfError
+              . Impossible
+              $ "Found unbound name " <> name
 
 addNames :: Term Fresh -> TyM (Term Name)
-addNames = traverse $ \i ->  lift $ asks (M.! i)
+addNames = traverse $
+           \i -> view (nameMap . at i) >>= \case
+             Just name -> return name
+             Nothing -> magnify errorCxt
+                        . hlfError
+                        . Impossible
+                        $ "Found unbound symbol " <> Te.pack (show i)
 
 typeError :: Term Fresh -> Term Fresh -> TyM a
-typeError l r =
-  (TypeMismatch <$> addNames l <*> addNames r) >>= hlfError . TypeError
+typeError l r = do
+  err <- (TypeMismatch <$> addNames l <*> addNames r)
+  magnify errorCxt $ hlfError (TypeError err)
 
 typeTerm :: Int -> Context -> Term Fresh -> TyM (Term Fresh)
 typeTerm i cxt t = do
   namedT <- addNames t
-  local (set termExpr namedT) $
+  local (errorCxt . termExpr .~ namedT) $
     case t of
     Star -> return Star
     Var j -> lookupVar j cxt
@@ -65,7 +80,7 @@ typeTerm i cxt t = do
     When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r]
                 Star
 
-checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> ErrorM (Reader NameMap) ()
+checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> TyM ()
 checkTerm i cxt term ty = do
   ty' <- typeTerm i cxt term
   when (nf ty' /= nf ty) $ typeError ty ty'
@@ -74,5 +89,7 @@ checkTerm i cxt term ty = do
 isType :: Int -> Context -> Term Fresh -> TyM ()
 isType i cxt ty = checkTerm i cxt ty Star
 
-typeProgram :: NameMap -> Context -> Bool
-typeProgram nm cxt = undefined (T.traverse (typeTerm 0 cxt) cxt)
+typeProgram :: NameMap -> Context -> ErrorM ()
+typeProgram nms cxt = flip runReaderT (TypeInfo nms undefined)
+                      . void
+                      $ T.traverse (typeTerm 0 cxt) cxt
