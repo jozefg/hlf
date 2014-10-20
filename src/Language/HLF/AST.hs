@@ -42,6 +42,9 @@ data Fresh = Free Int | Unbound Int
 type Context = M.Map Fresh (Term Fresh)
 type Name = T.Text
 
+fresh2name :: Fresh -> Name
+fresh2name = T.pack . show
+
 lam :: Eq a => a -> Term a -> Term a -> Term a
 lam a f = Lam (abstract1 a f)
 
