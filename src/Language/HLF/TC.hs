@@ -48,37 +48,37 @@ typeError l r = do
   err <- (TypeMismatch <$> addNames l <*> addNames r)
   magnify errorCxt $ hlfError (TypeError err)
 
-typeTerm :: Int -> Context -> Term Fresh -> TyM (Term Fresh)
-typeTerm i cxt t = do
+typeTerm :: Int -> Term Fresh -> TyM (Term Fresh)
+typeTerm i t = do
   namedT <- addNames t
   local (errorCxt . termExpr .~ Just namedT) $
     case t of
      Star -> return Star
      Var j -> lookupVar j
-     Lam body argTy -> bind i argTy $ typeTerm (i + 1) cxt $ unBind i body
+     Lam body argTy -> bind i argTy $ typeTerm (i + 1) $ unBind i body
      f :@: a ->
-       typeTerm i cxt f >>= \case
+       typeTerm i f >>= \case
          Pi ty retTy ->
-           assert [checkTerm i cxt a $ nf ty] (instantiate1 (nf a) retTy)
+           assert [checkTerm i a $ nf ty] (instantiate1 (nf a) retTy)
          When r l ->
-           assert [checkTerm i cxt a $ nf l] (nf r)
+           assert [checkTerm i a $ nf l] (nf r)
          ty -> do
-           argTy <- typeTerm i cxt a
+           argTy <- typeTerm i a
            typeError ty (argTy --> Var (Unbound i))
      Pi ty body ->
-       assert [ isType i cxt ty
-              , bind i (nf ty) $ isType (i + 1) cxt (unBind i body)]
+       assert [ isType i ty
+              , bind i (nf ty) $ isType (i + 1) (unBind i body)]
        Star
-     When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r] Star
+     When r l -> assert [isType i $ nf l, isType i $ nf r] Star
 
-checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> TyM ()
-checkTerm i cxt term ty = do
-  ty' <- typeTerm i cxt term
+checkTerm :: Int -> Term Fresh -> Term Fresh -> TyM ()
+checkTerm i term ty = do
+  ty' <- typeTerm i term
   when (nf ty' /= nf ty) $ typeError ty ty'
 
 
-isType :: Int -> Context -> Term Fresh -> TyM ()
-isType i cxt ty = checkTerm i cxt ty Star
+isType :: Int -> Term Fresh -> TyM ()
+isType i ty = checkTerm i ty Star
 
 typeProgram :: NameMap -> Context -> ErrorM ()
 typeProgram nms cxt = flip runReaderT info
@@ -88,4 +88,4 @@ typeProgram nms cxt = flip runReaderT info
         typeName i term = do
           n <- nameFor i
           local (errorCxt . termName .~ Just n) $
-            typeTerm 0 cxt term
+            typeTerm 0 term
