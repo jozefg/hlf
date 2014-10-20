@@ -34,15 +34,10 @@ nameFor :: Fresh -> TyM Name
 nameFor i = fromMaybe (Te.pack $ show i) <$> view (nameMap . at i)
 
 lookupVar :: Fresh -> Context -> TyM (Term Fresh)
-lookupVar i cxt =
-  case M.lookup i cxt of
-   Just ty -> return ty
-   Nothing -> do
-     name <- nameFor i
-     magnify errorCxt
-              . hlfError
-              . Impossible
-              $ "Found unbound symbol " <> name
+lookupVar i cxt = do
+  name <- nameFor i
+  magnify errorCxt $
+    impossible ("Found unbound symbol " <> name) (M.lookup i cxt)
 
 addNames :: Term Fresh -> TyM (Term Name)
 addNames = traverse nameFor
