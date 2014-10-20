@@ -39,7 +39,6 @@ lookupVar i = do
   magnify errorCxt $
     impossible ("Found unbound symbol " <> name) term
 
-
 addNames :: Term Fresh -> TyM (Term Name)
 addNames = traverse nameFor
 
