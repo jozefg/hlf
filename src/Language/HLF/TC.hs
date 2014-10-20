@@ -54,7 +54,7 @@ typeTerm i t = do
     case t of
      Star -> return Star
      Var j -> lookupVar j
-     Lam body argTy -> bind i argTy $ typeTerm (i + 1) $ unBind i body
+     Lam body argTy -> bind i argTy . typeTerm (i + 1) $ unBind i body
      f :@: a -> typeApp i f a
      Pi ty body -> typePi i ty body
      When r l -> assert [isType i $ nf l, isType i $ nf r] Star
