@@ -31,7 +31,7 @@ bind :: Int -> Term Fresh -> Context -> Context
 bind = M.insert . Unbound
 
 nameFor :: Fresh -> TyM Name
-nameFor i = fromMaybe (Te.pack $ show i) <$> view (nameMap . at i)
+nameFor i = fromMaybe (fresh2name i) <$> view (nameMap . at i)
 
 lookupVar :: Fresh -> Context -> TyM (Term Fresh)
 lookupVar i cxt = do
