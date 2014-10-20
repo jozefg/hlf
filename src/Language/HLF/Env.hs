@@ -7,7 +7,6 @@ import qualified Data.Text           as T
 import           Data.Traversable
 import           Language.HLF.AST
 
-type Name = T.Text
 data Definition a = (:=) { defName :: Name
                          , defTy   :: Term Name }
                   deriving(Show)
