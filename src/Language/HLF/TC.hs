@@ -26,8 +26,8 @@ assert as b = F.sequence_ as >> return b
 unBind :: Int -> Scope () Term Fresh -> Term Fresh
 unBind i sc = instantiate1 (Var (Unbound i)) sc
 
-bind :: Int -> Term Fresh -> Context -> Context
-bind = M.insert . Unbound
+bind :: Int -> Term Fresh -> TyM a -> TyM a
+bind i term act = local (context . at (Unbound i) .~ Just term) act
 
 nameFor :: Fresh -> TyM Name
 nameFor i = fromMaybe (fresh2name i) <$> view (nameMap . at i)
@@ -53,7 +53,7 @@ typeTerm i cxt t = do
     case t of
      Star -> return Star
      Var j -> lookupVar j cxt
-     Lam body argTy -> typeTerm (i + 1) (bind i argTy cxt) $ unBind i body
+     Lam body argTy -> bind i argTy $ typeTerm (i + 1) cxt $ unBind i body
      f :@: a ->
        typeTerm i cxt f >>= \case
          Pi ty retTy ->
@@ -65,7 +65,7 @@ typeTerm i cxt t = do
            typeError ty (argTy --> Var (Unbound i))
      Pi ty body ->
        assert [ isType i cxt ty
-              , isType (i + 1) (bind i (nf ty) cxt) (unBind i body)]
+              , bind i (nf ty) $ isType (i + 1) cxt (unBind i body)]
        Star
      When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r] Star
 
