@@ -32,11 +32,13 @@ bind i term act = local (context . at (Unbound i) .~ Just term) act
 nameFor :: Fresh -> TyM Name
 nameFor i = fromMaybe (fresh2name i) <$> view (nameMap . at i)
 
-lookupVar :: Fresh -> Context -> TyM (Term Fresh)
-lookupVar i cxt = do
+lookupVar :: Fresh -> TyM (Term Fresh)
+lookupVar i = do
   name <- nameFor i
+  term <- view (context . at i)
   magnify errorCxt $
-    impossible ("Found unbound symbol " <> name) (M.lookup i cxt)
+    impossible ("Found unbound symbol " <> name) term
+
 
 addNames :: Term Fresh -> TyM (Term Name)
 addNames = traverse nameFor
@@ -52,7 +54,7 @@ typeTerm i cxt t = do
   local (errorCxt . termExpr .~ Just namedT) $
     case t of
      Star -> return Star
-     Var j -> lookupVar j cxt
+     Var j -> lookupVar j
      Lam body argTy -> bind i argTy $ typeTerm (i + 1) cxt $ unBind i body
      f :@: a ->
        typeTerm i cxt f >>= \case
