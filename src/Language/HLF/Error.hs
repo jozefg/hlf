@@ -39,3 +39,11 @@ type ContextM = ReaderT ErrorContext ErrorM
 hlfError :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
             => WrongThing -> m a
 hlfError wrong = (HLFError wrong `fmap` ask) >>= throwError
+
+impossible :: (Functor m, MonadError HLFError m, MonadReader ErrorContext m)
+            => T.Text -> m (Maybe a) -> m a
+impossible msg action = do
+  may <- action
+  case may of
+   Nothing -> hlfError (Impossible msg)
+   Just a -> return a
