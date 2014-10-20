@@ -61,26 +61,26 @@ typeError l r = do
 typeTerm :: Int -> Context -> Term Fresh -> TyM (Term Fresh)
 typeTerm i cxt t = do
   namedT <- addNames t
-  local (errorCxt . termExpr .~ namedT) $
+  local (errorCxt . termExpr .~ Just namedT) $
     case t of
-    Star -> return Star
-    Var j -> lookupVar j cxt
-    Lam body argTy -> typeTerm (i + 1) (bind i argTy cxt) $ unBind i body
-    f :@: a ->
-      typeTerm i cxt f >>= \case
-        Pi ty retTy ->
-          assert [checkTerm i cxt a $ nf ty] (instantiate1 (nf a) retTy)
-        When r l ->
-          assert [checkTerm i cxt a $ nf l] (nf r)
-        ty -> do
-          argTy <- typeTerm i cxt a
-          typeError ty (argTy --> Var (Unbound i))
-    Pi ty body ->
-      assert [ isType i cxt ty
-             , isType (i + 1) (bind i (nf ty) cxt) (unBind i body)]
-      Star
-    When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r]
-                Star
+     Star -> return Star
+     Var j -> lookupVar j cxt
+     Lam body argTy -> typeTerm (i + 1) (bind i argTy cxt) $ unBind i body
+     f :@: a ->
+       typeTerm i cxt f >>= \case
+         Pi ty retTy ->
+           assert [checkTerm i cxt a $ nf ty] (instantiate1 (nf a) retTy)
+         When r l ->
+           assert [checkTerm i cxt a $ nf l] (nf r)
+         ty -> do
+           argTy <- typeTerm i cxt a
+           typeError ty (argTy --> Var (Unbound i))
+     Pi ty body ->
+       assert [ isType i cxt ty
+              , isType (i + 1) (bind i (nf ty) cxt) (unBind i body)]
+       Star
+     When r l -> assert [isType i cxt $ nf l, isType i cxt $ nf r]
+                 Star
 
 checkTerm :: Int -> Context -> Term Fresh -> Term Fresh -> TyM ()
 checkTerm i cxt term ty = do
@@ -92,6 +92,11 @@ isType :: Int -> Context -> Term Fresh -> TyM ()
 isType i cxt ty = checkTerm i cxt ty Star
 
 typeProgram :: NameMap -> Context -> ErrorM ()
-typeProgram nms cxt = flip runReaderT (TypeInfo nms undefined)
+typeProgram nms cxt = flip runReaderT info
                       . void
-                      $ T.traverse (typeTerm 0 cxt) cxt
+                      $ itraverse typeName cxt
+  where info = TypeInfo nms $ ErrorContext TypeChecking Nothing Nothing
+        typeName i term = do
+          n <- nameFor i
+          local (errorCxt . termName .~ Just n) $
+            typeTerm 0 cxt term

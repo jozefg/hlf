@@ -23,9 +23,9 @@ data Phase = EnvironmentChecking
            | TypeChecking
            deriving Show
 
-data ErrorContext = ErrorContext { _phase :: Phase
-                                 , _termName :: Name
-                                 , _termExpr :: Term Name }
+data ErrorContext = ErrorContext { _phase    :: Phase
+                                 , _termName :: Maybe Name
+                                 , _termExpr :: Maybe (Term Name) }
                   deriving Show
 makeLenses ''ErrorContext
 
