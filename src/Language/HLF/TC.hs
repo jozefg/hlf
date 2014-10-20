@@ -10,7 +10,6 @@ import qualified Data.Map             as M
 import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text            as Te
-import qualified Data.Traversable     as T
 import           Language.HLF.AST
 import           Language.HLF.Error
 import           Language.HLF.Eval
@@ -32,12 +31,7 @@ bind :: Int -> Term Fresh -> Context -> Context
 bind = M.insert . Unbound
 
 nameFor :: Fresh -> TyM Name
-nameFor i = view (nameMap . at i) >>= \case
-  Just name -> return name
-  Nothing -> magnify errorCxt
-             . hlfError
-             . Impossible
-             $ "Found unknown symbol " <> Te.pack (show i)
+nameFor i = fromMaybe (Te.pack $ show i) <$> view (nameMap . at i)
 
 lookupVar :: Fresh -> Context -> TyM (Term Fresh)
 lookupVar i cxt =
