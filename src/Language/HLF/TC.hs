@@ -3,13 +3,11 @@ module Language.HLF.TC where
 import           Bound
 import           Control.Applicative
 import           Control.Lens         hiding (Context)
-import           Control.Monad        (guard)
 import           Control.Monad.Reader
 import qualified Data.Foldable        as F
 import qualified Data.Map             as M
 import           Data.Maybe
 import           Data.Monoid
-import qualified Data.Text            as Te
 import           Language.HLF.AST
 import           Language.HLF.Error
 import           Language.HLF.Eval
