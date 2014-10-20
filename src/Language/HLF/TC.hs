@@ -56,20 +56,24 @@ typeTerm i t = do
      Star -> return Star
      Var j -> lookupVar j
      Lam body argTy -> bind i argTy $ typeTerm (i + 1) $ unBind i body
-     f :@: a ->
-       typeTerm i f >>= \case
-         Pi ty retTy ->
-           assert [checkTerm i a $ nf ty] (instantiate1 (nf a) retTy)
-         When r l ->
-           assert [checkTerm i a $ nf l] (nf r)
-         ty -> do
-           argTy <- typeTerm i a
-           typeError ty (argTy --> Var (Unbound i))
-     Pi ty body ->
-       assert [ isType i ty
-              , bind i (nf ty) $ isType (i + 1) (unBind i body)]
-       Star
+     f :@: a -> typeApp i f a
+     Pi ty body -> typePi i ty body
      When r l -> assert [isType i $ nf l, isType i $ nf r] Star
+
+typeApp :: Int -> Term Fresh -> Term Fresh -> TyM (Term Fresh)
+typeApp i f a = typeTerm i f >>= \case
+  Pi ty retTy ->
+    assert [checkTerm i a $ nf ty] (instantiate1 (nf a) retTy)
+  When r l ->
+    assert [checkTerm i a $ nf l] (nf r)
+  ty -> do
+    argTy <- typeTerm i a
+    typeError ty (argTy --> Var (Unbound i))
+
+typePi :: Int -> Term Fresh -> Scope () Term Fresh -> TyM (Term Fresh)
+typePi i ty body = assert [ isType i ty
+                          , bind i (nf ty) $ isType (i + 1) (unBind i body)]
+                   Star
 
 checkTerm :: Int -> Term Fresh -> Term Fresh -> TyM ()
 checkTerm i term ty = do
