@@ -28,13 +28,16 @@ lookupName name map = case M.lookup name map of
 flipAList :: [(a, b)] -> [(b, a)]
 flipAList = map $ \(a, b) -> (b, a)
 
-bindEnv :: Program -> ContextM (M.Map Fresh Name, Context)
-bindEnv (Env env) = (M.fromList $ flipAList names,)
-                    <$> foldr bindTy (return M.empty) env
-  where names = zip (map defName env) (map Free [0..])
+bindEnv :: Program -> ErrorM (M.Map Fresh Name, Context)
+bindEnv (Env env) = flip runReaderT info
+                    $ (,) symMap <$> foldr bindTy (return M.empty) env
+  where info = ErrorContext EnvironmentChecking Nothing Nothing
+        names = zip (map defName env) (map Free [0..])
         nameMap = M.fromList names
+        symMap = M.fromList $ flipAList names
         bindTy (name := ty) tyMap =
-          local (set termName name . set termExpr ty) $
+          local ((termName .~ Just name)
+                 . (termExpr .~ Just ty)) $
           M.insert <$> lookupName name nameMap
                    <*> traverse (flip lookupName nameMap) ty
                    <*> tyMap
