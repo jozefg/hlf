@@ -31,7 +31,7 @@ checkTypeFam (TypeFamily (name := _) constrs) = mapM_ checkConstr constrs
   where checkConstr (constrName := term) =
           local (termName .~ Just constrName) $
           local (termExpr .~ Just term) $
-            when (endsIn name term) $ hlfError (EnvError NotAConstr)
+            when (not $ endsIn name term) $ hlfError (EnvError NotAConstr)
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name nameMap = case M.lookup name nameMap of
