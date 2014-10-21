@@ -18,6 +18,13 @@ infixr 0 :=
 data TypeFamily a = TypeFamily { tyFam   :: Definition a
                                , constrs :: [Definition a]}
 
+endsIn :: Eq a => a -> Term a -> Bool
+endsIn name = go . fmap (== name)
+  where go t = case t of
+          When (Var isName) _ -> isName
+          Var isName :@: _ -> isName
+          Pi _ body -> go (instantiate1 (Var False) body)
+          _ -> False
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name nameMap = case M.lookup name nameMap of
