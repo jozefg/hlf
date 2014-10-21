@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Language.HLF.Env where
+import           Bound
 import           Control.Applicative
 import           Control.Lens         hiding (Context)
 import           Control.Monad.Reader
@@ -12,17 +13,20 @@ import           Language.HLF.Error
 data Definition a = (:=) { defName :: Name
                          , defTy   :: Term Name }
                   deriving(Show)
-
 infixr 0 :=
 
-newtype Env a = Env {unEnv :: [Definition a]}
-              deriving(Monoid)
-type Program = Env Name
+data TypeFamily a = TypeFamily { tyFam   :: Definition a
+                               , constrs :: [Definition a]}
+
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name map = case M.lookup name map of
   Just i -> return i
   Nothing -> hlfError (EnvError $ UnboundName name)
+
+newtype Env a = Env {unEnv :: [Definition a]}
+              deriving(Monoid)
+type Program = Env Name
 
 flipAList :: [(a, b)] -> [(b, a)]
 flipAList = map $ \(a, b) -> (b, a)
