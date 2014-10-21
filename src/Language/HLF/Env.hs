@@ -6,14 +6,13 @@ import           Control.Lens         hiding (Context)
 import           Control.Monad.Reader
 import qualified Data.Map             as M
 import           Data.Monoid
-import qualified Data.Text            as T
-import           Data.Traversable
 import           Language.HLF.AST
 import           Language.HLF.Error
 
 data Definition a = (:=) { defName :: Name
                          , defTy   :: Term Name }
                   deriving(Show)
+
 infixr 0 :=
 
 newtype Env a = Env {unEnv :: [Definition a]}

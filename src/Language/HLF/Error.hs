@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.HLF.Error where
-import           Control.Error
 import           Control.Lens
 import           Control.Monad.Error
 import           Control.Monad.Reader
