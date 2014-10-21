@@ -20,7 +20,7 @@ data TypeFamily a = TypeFamily { tyFam   :: Definition a
 
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
-lookupName name map = case M.lookup name map of
+lookupName name nameMap = case M.lookup name nameMap of
   Just i -> return i
   Nothing -> hlfError (EnvError $ UnboundName name)
 
