@@ -26,8 +26,8 @@ endsIn name = go . fmap (== name)
           Pi _ body -> go (instantiate1 (Var False) body)
           _ -> False
 
-checkTypFam :: TypeFamily Name -> ContextM ()
-checkTypFam (TypeFamily (name := _) constrs) = mapM_ checkConstr constrs
+checkTypeFam :: TypeFamily Name -> ContextM ()
+checkTypeFam (TypeFamily (name := _) constrs) = mapM_ checkConstr constrs
   where checkConstr (constrName := term) =
           local (termName .~ Just constrName) $
           local (termExpr .~ Just term) $
