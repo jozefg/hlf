@@ -26,6 +26,13 @@ endsIn name = go . fmap (== name)
           Pi _ body -> go (instantiate1 (Var False) body)
           _ -> False
 
+checkTypFam :: TypeFamily Name -> ContextM ()
+checkTypFam (TypeFamily (name := _) constrs) = mapM_ checkConstr constrs
+  where checkConstr (constrName := term) =
+          local (termName .~ Just constrName) $
+          local (termExpr .~ Just term) $
+            when (endsIn name term) $ hlfError (EnvError NotAConstr)
+
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name nameMap = case M.lookup name nameMap of
   Just i -> return i

@@ -16,6 +16,7 @@ data WrongThing = TypeError TypeError
 data TypeError = TypeMismatch {saw, expected :: Term Name}
                deriving Show
 data EnvError = UnboundName Name
+              | NotAConstr
               deriving Show
 
 data Phase = EnvironmentChecking
