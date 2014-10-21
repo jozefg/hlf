@@ -6,6 +6,7 @@ import           Control.Monad       (ap)
 import           Data.Foldable
 import qualified Data.Map            as M
 import           Data.String
+import qualified Data.Text           as T
 import           Data.Traversable
 import           Prelude.Extras
 
@@ -39,6 +40,10 @@ instance Monad Term where
 data Fresh = Free Int | Unbound Int
            deriving(Eq, Show, Ord)
 type Context = M.Map Fresh (Term Fresh)
+type Name = T.Text
+
+fresh2name :: Fresh -> Name
+fresh2name = T.pack . show
 
 lam :: Eq a => a -> Term a -> Term a -> Term a
 lam a f = Lam (abstract1 a f)
