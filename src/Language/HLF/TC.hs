@@ -10,7 +10,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           Language.HLF.AST
 import           Language.HLF.Error
-import           Language.HLF.Eval
+import           Language.HLF.Normalize
 
 type NameMap = M.Map Fresh Name
 data TypeInfo = TypeInfo { _nameMap  :: NameMap

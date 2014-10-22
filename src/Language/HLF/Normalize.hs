@@ -1,4 +1,4 @@
-module Language.HLF.Eval where
+module Language.HLF.Normalize where
 import Bound
 import Language.HLF.AST
 
