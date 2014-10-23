@@ -5,6 +5,7 @@ import Control.Lens
 import Control.Monad.Reader
 import Language.HLF.AST
 import Language.HLF.Error
+import Language.HLF.TC.Arity
 import Language.HLF.TC.Util
 
 isBetaNormal :: Term Fresh -> TyM ()
@@ -25,5 +26,18 @@ isBetaNormal = go 0
              Var _ :@: r -> go i r
              ap@(_ :@: _) -> betaError ap
 
+appChain :: Term a -> (Term a, [Term a])
+appChain = go []
+  where go chain (l :@: r) = go (r : chain) l
+        go chain l = (l, chain)
+
+isEtaLong :: Int -> Term Fresh -> TyM ()
+isEtaLong i t = do
+  aMap <- view arityMap
+  when (arity 0 aMap t /= 0) $ etaError t
+  checkEverywhere i aMap t
+  where checkEverywhere i aMap t = undefined
+
+
 preTC :: Term Fresh -> TyM ()
-preTC = isBetaNormal
+preTC t = isBetaNormal t *> isEtaLong 0 t
