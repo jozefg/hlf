@@ -16,10 +16,16 @@ typeTerm i t = do
     case t of
      Star -> return Star -- See note 1
      Var j -> lookupVar j
-     Lam body argTy -> bind i argTy . typeTerm (i + 1) $ unBind i body
+     Lam body argTy -> typeLam i body argTy
      f :@: a -> typeApp i f a
      Pi ty body -> typePi i ty body
      When r l -> assert [isType i $ nf l, isType i $ nf r] Star
+
+typeLam :: Int -> Scope () Term Fresh -> Term Fresh -> TyM (Term Fresh)
+typeLam i body argTy = do
+  let argTy' = nf argTy
+  resultTy <- bind i argTy' $ typeTerm (i + 1) (unBind i body)
+  return $ Pi argTy (abstract1 (Unbound i) resultTy)
 
 typeApp :: Int -> Term Fresh -> Term Fresh -> TyM (Term Fresh)
 typeApp i f a = typeTerm i f >>= \case
@@ -38,8 +44,10 @@ typePi i ty body = assert [ isType i ty
 
 checkTerm :: Int -> Term Fresh -> Term Fresh -> TyM ()
 checkTerm i term ty = do
-  ty' <- typeTerm i term
-  when (nf ty' /= nf ty) $ typeError ty ty'
+  expr <- addNames term
+  local (errorCxt . termExpr .~ Just expr) $ do
+    ty' <- typeTerm i term
+    when (nf ty' /= nf ty) $ typeError ty ty'
 
 isType :: Int -> Term Fresh -> TyM ()
 isType i ty = checkTerm i ty Star
