@@ -12,7 +12,7 @@ arityBound i aMap ty scope = arity (i + 1) aMap' term
 
 arity :: Int -> ArityMap -> Term Fresh -> Int
 arity i aMap t = case t of
-  When r _ -> 1 + arity i aMap r
+  When _ _ -> 0
   Pi _ _ -> 0
   Lam scope ty -> 1 + arityBound i aMap ty scope
   Var a -> aMap M.! a
