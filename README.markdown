@@ -7,12 +7,12 @@ For some examples of how to actually use this look at
 `examples/`. Notably this includes the code for the typing judgments
 of simply typed lambda calculus and natural number examples.
 
-HLF doesn't have the logic programming half of Twelf yet. This is
-coming Real Soon Now.
+For building, all you need to do is the usual
 
-If you're looking at this on GitHub, please submit issues on the
- [bitbucket repository][bitbucket]. I actually pay attention to that
- one.
+    cabal sandbox init
+    cabal install # Watch 50% of hackage install with lens
+
+And then you can tinker around with toy examples.
 
 [twelf]: http://twelf.org
 [bitbucket]: http://bitbucket.org/jozefg/hlf
