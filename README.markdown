@@ -10,4 +10,9 @@ of simply typed lambda calculus and natural number examples.
 HLF doesn't have the logic programming half of Twelf yet. This is
 coming Real Soon Now.
 
+If you're looking at this on GitHub, please submit issues on the
+ [bitbucket repository][bitbucket]. I actually pay attention to that
+ one.
+
 [twelf]: http://twelf.org
+[bitbucket]: http://bitbucket.org/jozefg/hlf
