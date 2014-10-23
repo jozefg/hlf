@@ -7,8 +7,8 @@ import Language.HLF.AST
 import Language.HLF.Error
 import Language.HLF.TC.Util
 
-isEtaLong :: Term Fresh -> TyM ()
-isEtaLong = go 0
+isBetaNormal :: Term Fresh -> TyM ()
+isBetaNormal = go 0
   where go i t = do
           expr <- addNames t
           local (errorCxt . termExpr .~ Just expr) $
@@ -23,7 +23,7 @@ isEtaLong = go 0
              (Var _ :@: a) :@: b -> go i a *> go i b
              l@(_ :@: _) :@: r -> go i l *> go i r
              Var _ :@: r -> go i r
-             ap@(_ :@: _) -> etaError ap
+             ap@(_ :@: _) -> betaError ap
 
 preTC :: Term Fresh -> TyM ()
-preTC = isEtaLong
+preTC = isBetaNormal

@@ -47,7 +47,7 @@ typeError expected saw = do
   err <- (TypeMismatch <$> addNames saw <*> addNames expected)
   magnify errorCxt $ hlfError (TypeError err)
 
-etaError :: Term Fresh -> TyM a
-etaError t = do
-  error <- NotEtaLong <$> addNames t
+betaError :: Term Fresh -> TyM a
+betaError t = do
+  error <- NotBetaNormal <$> addNames t
   magnify errorCxt $ hlfError (TypeError error)
