@@ -43,8 +43,8 @@ addNames :: Term Fresh -> TyM (Term Name)
 addNames = traverse nameFor
 
 typeError :: Term Fresh -> Term Fresh -> TyM a
-typeError l r = do
-  err <- (TypeMismatch <$> addNames l <*> addNames r)
+typeError expected saw = do
+  err <- (TypeMismatch <$> addNames saw <*> addNames expected)
   magnify errorCxt $ hlfError (TypeError err)
 
 etaError :: Term Fresh -> TyM a
