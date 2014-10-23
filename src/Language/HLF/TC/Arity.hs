@@ -6,17 +6,19 @@ import           Language.HLF.AST
 import           Language.HLF.Error
 import           Language.HLF.TC.Util
 
-arityBound :: ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
-arityBound = undefined
+arityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
+arityBound i aMap ty scope = arity (i + 1) aMap' term
+  where term = instantiate1 (Var $ Unbound i) scope
+        aMap' = M.insert (Unbound i) (arity i aMap ty) aMap
 
-arity :: ArityMap -> Term Fresh -> Int
-arity aMap t = case t of
-  When r _ -> 1 + arity aMap r
-  Pi ty scope -> arityBound aMap ty scope
-  Lam scope ty -> arityBound aMap ty scope
+arity :: Int -> ArityMap -> Term Fresh -> Int
+arity i aMap t = case t of
+  When r _ -> 1 + arity i aMap r
+  Pi ty scope -> arityBound i aMap ty scope
+  Lam scope ty -> arityBound i aMap ty scope
   Var a -> aMap M.! a
+  l :@: _ -> arity i aMap l - 1
   Star -> 0
-  l :@: _ -> arity aMap l - 1
 
 appChain :: Term a -> (Term a, [Term a])
 appChain = go []
