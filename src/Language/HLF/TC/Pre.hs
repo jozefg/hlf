@@ -25,16 +25,5 @@ isBetaNormal = go 0
              Var _ :@: r -> go i r
              ap@(_ :@: _) -> betaError ap
 
-arity :: Term () -> Int
-arity t = case t of
-  When r _ -> 1 + arity r
-  Pi _ scope -> 1 + arity (instantiate1 (Var ()) scope)
-  _ -> 0
-
-appChain :: Term a -> (Term a, [Term a])
-appChain = go []
-  where go chain (l :@: r) = go (r : chain) l
-        go chain l = (l, chain)
-
 preTC :: Term Fresh -> TyM ()
 preTC = isBetaNormal
