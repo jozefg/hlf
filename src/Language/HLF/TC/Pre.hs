@@ -36,6 +36,7 @@ arityM t = arity 0 <$> view arityMap <*> return t
 
 checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
 checkArityBound i ty scope = do
+  checkArity i ty
   tyAr <- arityM ty
   local (arityMap . at (Unbound i) .~ Just tyAr) $
    checkArity (i + 1) (instantiate1 (Var $ Unbound i) scope)
@@ -46,6 +47,11 @@ checkArity i t = do
   when (a /= 0) $ etaError t
   checkEverywhere i t
   where checkEverywhere i Star = return ()
+        checkEverywhere i (Pi ty body) = checkArityBound i ty body
+        checkEverywhere i (Lam _ ty) = checkArity i ty
+        checkEverywhere i (When r l) = checkArity i l *> checkArity i r
+        checkEverywhere i Var{} = return ()
+        checkEverywhere i (_ :@: r) = checkArity i r
 
 isEtaLong :: Term Fresh -> TyM ()
 isEtaLong = checkArity 0
