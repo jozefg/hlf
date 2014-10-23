@@ -34,12 +34,21 @@ appChain = go []
 arityM :: Term Fresh -> TyM Int
 arityM t = arity 0 <$> view arityMap <*> return t
 
-isEtaLong :: Term Fresh -> TyM ()
-isEtaLong t = do
+checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
+checkArityBound i ty scope = do
+  tyAr <- arityM ty
+  local (arityMap . at (Unbound i) .~ Just tyAr) $
+   checkArity (i + 1) (instantiate1 (Var $ Unbound i) scope)
+
+checkArity :: Int -> Term Fresh -> TyM ()
+checkArity i t = do
   a <- arityM t
   when (a /= 0) $ etaError t
-  checkEverywhere t
-  where checkEverywhere t = undefined
+  checkEverywhere i t
+  where checkEverywhere i Star = return ()
+
+isEtaLong :: Term Fresh -> TyM ()
+isEtaLong = checkArity 0
 
 
 preTC :: Term Fresh -> TyM ()
