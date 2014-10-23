@@ -18,6 +18,7 @@ isEtaLong = go 0
              Lam body argTy ->
                go i argTy *> go (i + 1) (instantiate1 (Var $ Unbound i) body)
              When r l -> go i r *> go i l
+             Star -> return ()
              Var _ -> return ()
              (Var _ :@: a) :@: b -> go i a *> go i b
              l@(_ :@: _) :@: r -> go i l *> go i r
