@@ -31,13 +31,16 @@ appChain = go []
   where go chain (l :@: r) = go (r : chain) l
         go chain l = (l, chain)
 
-isEtaLong :: Int -> Term Fresh -> TyM ()
-isEtaLong i t = do
-  aMap <- view arityMap
-  when (arity 0 aMap t /= 0) $ etaError t
-  checkEverywhere i aMap t
-  where checkEverywhere i aMap t = undefined
+arityM :: Term Fresh -> TyM Int
+arityM t = arity 0 <$> view arityMap <*> return t
+
+isEtaLong :: Term Fresh -> TyM ()
+isEtaLong t = do
+  a <- arityM t
+  when (a /= 0) $ etaError t
+  checkEverywhere t
+  where checkEverywhere t = undefined
 
 
 preTC :: Term Fresh -> TyM ()
-preTC t = isBetaNormal t *> isEtaLong 0 t
+preTC t = isBetaNormal t *> isEtaLong t
