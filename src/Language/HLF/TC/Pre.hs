@@ -23,3 +23,6 @@ isEtaLong = go 0
              l@(_ :@: _) :@: r -> go i l *> go i r
              Var _ :@: r -> go i r
              ap@(_ :@: _) -> etaError ap
+
+preTC :: Term Fresh -> TyM ()
+preTC = isEtaLong
