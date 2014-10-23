@@ -13,16 +13,11 @@ arityBound i aMap ty scope = arity (i + 1) aMap' term
 arity :: Int -> ArityMap -> Term Fresh -> Int
 arity i aMap t = case t of
   When r _ -> 1 + arity i aMap r
-  Pi ty scope -> arityBound i aMap ty scope
-  Lam scope ty -> arityBound i aMap ty scope
+  Pi _ _ -> 0
+  Lam scope ty -> 1 + arityBound i aMap ty scope
   Var a -> aMap M.! a
   l :@: _ -> arity i aMap l - 1
   Star -> 0
-
-appChain :: Term a -> (Term a, [Term a])
-appChain = go []
-  where go chain (l :@: r) = go (r : chain) l
-        go chain l = (l, chain)
 
 buildArityMap :: Context -> ArityMap
 buildArityMap = foldl' build M.empty . M.toList
