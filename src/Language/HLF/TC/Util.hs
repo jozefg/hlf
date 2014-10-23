@@ -46,3 +46,8 @@ typeError :: Term Fresh -> Term Fresh -> TyM a
 typeError l r = do
   err <- (TypeMismatch <$> addNames l <*> addNames r)
   magnify errorCxt $ hlfError (TypeError err)
+
+etaError :: Term Fresh -> TyM a
+etaError t = do
+  error <- NotEtaLong <$> addNames t
+  magnify errorCxt $ hlfError (TypeError error)
