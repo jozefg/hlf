@@ -42,15 +42,15 @@ checkArityBound i ty scope = do
    checkArity (i + 1) (instantiate1 (Var $ Unbound i) scope)
 
 checkArity :: Int -> Term Fresh -> TyM ()
-checkArity i t = do
+checkArity j t = do
   a <- arityM t
   when (a /= 0) $ etaError t
-  checkEverywhere i t
-  where checkEverywhere i Star = return ()
+  checkEverywhere j t
+  where checkEverywhere _ Star = return ()
         checkEverywhere i (Pi ty body) = checkArityBound i ty body
         checkEverywhere i (Lam _ ty) = checkArity i ty
         checkEverywhere i (When r l) = checkArity i l *> checkArity i r
-        checkEverywhere i Var{} = return ()
+        checkEverywhere _ Var{} = return ()
         checkEverywhere i (_ :@: r) = checkArity i r
 
 isEtaLong :: Term Fresh -> TyM ()
