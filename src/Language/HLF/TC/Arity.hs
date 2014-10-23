@@ -1,9 +1,8 @@
 module Language.HLF.TC.Arity where
 import           Bound
-import           Control.Monad.Reader
+import           Data.Foldable
 import qualified Data.Map             as M
 import           Language.HLF.AST
-import           Language.HLF.Error
 import           Language.HLF.TC.Util
 
 arityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
@@ -25,6 +24,6 @@ appChain = go []
   where go chain (l :@: r) = go (r : chain) l
         go chain l = (l, chain)
 
-buildArityMap :: Context -> ContextM ArityMap
-buildArityMap = foldM build M.empty . M.toList
-  where build arities (i, term) = undefined
+buildArityMap :: Context -> ArityMap
+buildArityMap = foldl' build M.empty . M.toList
+  where build aMap (i, term) = M.insert i (arity 0 aMap term) aMap
