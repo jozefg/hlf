@@ -7,6 +7,7 @@ import Language.HLF.AST
 import Language.HLF.Error
 import Language.HLF.TC.Arity
 import Language.HLF.TC.Util
+import Debug.Trace
 
 isBetaNormal :: Term Fresh -> TyM ()
 isBetaNormal = go 0
@@ -32,18 +33,22 @@ appChain = go []
         go chain l = (l, chain)
 
 arityM :: Term Fresh -> TyM Int
-arityM t = arity 0 <$> view arityMap <*> return t
+arityM t = termArity 0 <$> view arityMap <*> return t
+
+tyArityM :: Term Fresh -> TyM Int
+tyArityM t = typeArity 0 <$> view arityMap <*> return t
 
 checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
 checkArityBound i ty scope = do
   checkArity i ty
-  tyAr <- arityM ty
+  tyAr <- tyArityM ty
   local (arityMap . at (Unbound i) .~ Just tyAr) $
    checkArity (i + 1) (instantiate1 (Var $ Unbound i) scope)
 
 checkArity :: Int -> Term Fresh -> TyM ()
 checkArity j t = do
   a <- arityM t
+  view arityMap >>= traceShowM
   when (a /= 0) $ etaError t
   checkEverywhere j t
   where checkEverywhere _ Star = return ()

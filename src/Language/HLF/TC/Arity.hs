@@ -5,20 +5,35 @@ import qualified Data.Map             as M
 import           Language.HLF.AST
 import           Language.HLF.TC.Util
 
-arityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
-arityBound i aMap ty scope = arity (i + 1) aMap' term
+termArityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
+termArityBound i aMap ty scope = termArity (i + 1) aMap' term
   where term = instantiate1 (Var $ Unbound i) scope
-        aMap' = M.insert (Unbound i) (arity i aMap ty) aMap
+        aMap' = M.insert (Unbound i) (typeArity i aMap ty) aMap
 
-arity :: Int -> ArityMap -> Term Fresh -> Int
-arity i aMap t = case t of
-  When _ _ -> 0
-  Pi _ _ -> 0
-  Lam scope ty -> 1 + arityBound i aMap ty scope
+typeArityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
+typeArityBound i aMap ty scope = typeArity (i + 1) aMap' term
+  where term = instantiate1 (Var $ Unbound i) scope
+        aMap' = M.insert (Unbound i) (typeArity i aMap ty) aMap
+
+
+termArity :: Int -> ArityMap -> Term Fresh -> Int
+termArity i aMap t = case t of
+  Lam scope ty -> 1 + termArityBound i aMap ty scope
   Var a -> aMap M.! a
-  l :@: _ -> arity i aMap l - 1
+  l :@: _ -> termArity i aMap l - 1
+  When{} -> 0
+  Pi{} -> 0
+  Star -> 0
+
+typeArity :: Int -> ArityMap -> Term Fresh -> Int
+typeArity i aMap t = case t of
+  When _ l -> 1 + typeArity i aMap l
+  Pi ty scope -> 1 + typeArityBound i aMap ty scope
+  Lam{} -> 0
+  Var a -> aMap M.! a
+  l :@: _ -> typeArity i aMap l - 1
   Star -> 0
 
 buildArityMap :: Context -> ArityMap
 buildArityMap = foldl' build M.empty . M.toList
-  where build aMap (i, term) = M.insert i (arity 0 aMap term) aMap
+  where build aMap (i, term) = M.insert i (typeArity 0 aMap term) aMap
