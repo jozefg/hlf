@@ -1,9 +1,11 @@
 module Language.HLF.TC where
-import Control.Lens hiding (Context)
+import Control.Lens           hiding (Context)
 import Control.Monad.Reader
 import Language.HLF.AST
 import Language.HLF.Error
 import Language.HLF.TC.Actual
+import Language.HLF.TC.Pre
+import Language.HLF.TC.Util
 
 typeProgram :: NameMap -> Context -> ErrorM ()
 typeProgram nms cxt = flip runReaderT info
