@@ -13,7 +13,10 @@ import           Language.HLF.AST
 import           Language.HLF.Error
 
 type NameMap = M.Map Fresh Name
+type ArityMap = M.Map Fresh Int
+
 data TypeInfo = TypeInfo { _nameMap  :: NameMap
+                         , _arityMap :: ArityMap
                          , _errorCxt :: ErrorContext
                          , _context  :: Context }
 makeLenses ''TypeInfo
