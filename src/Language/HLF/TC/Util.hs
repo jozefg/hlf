@@ -54,3 +54,8 @@ betaError :: Term Fresh -> TyM a
 betaError t = do
   error <- NotBetaNormal <$> addNames t
   magnify errorCxt $ hlfError (TypeError error)
+
+etaError :: Term Fresh -> TyM a
+etaError t = do
+  error <- NotEtaLong <$> addNames t
+  magnify errorCxt $ hlfError (TypeError error)
