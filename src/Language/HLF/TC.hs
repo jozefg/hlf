@@ -14,5 +14,6 @@ typeProgram nms cxt = flip runReaderT info
   where info = TypeInfo nms (ErrorContext TypeChecking Nothing Nothing) cxt
         typeName i term = do
           n <- nameFor i
-          local (errorCxt . termName .~ Just n) $
+          local (errorCxt . termName .~ Just n) $ do
+            preTC term
             typeTerm 0 term
