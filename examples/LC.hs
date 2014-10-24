@@ -10,7 +10,6 @@ program = Env [ "st"  := Star
               , "ap"  := "st" --> "st" --> "st"
               , "lam" := ("st" --> "st") --> "st"
               , "tt"  := "st"
-              , "example" := "ap" :@: ("lam" :@: lam "x" "x" "st") :@: "tt"
               , "ty"  := Star
               , "arr" := "ty" --> "ty" --> "ty"
               , "unit" := "ty"
