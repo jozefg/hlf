@@ -6,7 +6,6 @@ import           Control.Monad.Reader
 import           Data.Monoid
 import           Language.HLF.AST
 import           Language.HLF.Error
-import           Language.HLF.Normalize
 import           Language.HLF.TC.Util
 
 typeTerm :: Int -> Term Fresh -> TyM (Term Fresh)
