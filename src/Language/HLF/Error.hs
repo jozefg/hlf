@@ -15,7 +15,7 @@ data WrongThing = TypeError TypeError
 
 data TypeError = TypeMismatch {saw, expected :: Term Name}
                | NotBetaNormal (Term Name)
-               | NotEtaLong (Term Name)
+               | NotEtaLong (Term Name) Int
                deriving Show
 data EnvError = UnboundName Name
               | NotAConstr

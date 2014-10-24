@@ -29,9 +29,9 @@ typeArity :: Int -> ArityMap -> Term Fresh -> Int
 typeArity i aMap t = case t of
   When _ l -> 1 + typeArity i aMap l
   Pi ty scope -> 1 + typeArityBound i aMap ty scope
-  Lam{} -> 0
   Var a -> aMap M.! a
-  l :@: _ -> typeArity i aMap l - 1
+  Lam{} -> 0
+  _ :@: _ -> 0
   Star -> 0
 
 buildArityMap :: Context -> ArityMap
