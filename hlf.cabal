@@ -13,8 +13,11 @@ library
                      , Language.HLF.AST
                      , Language.HLF.Env
                      , Language.HLF.Error
-                     , Language.HLF.Normalize
                      , Language.HLF.TC
+                     , Language.HLF.TC.Actual
+                     , Language.HLF.TC.Arity
+                     , Language.HLF.TC.Pre
+                     , Language.HLF.TC.Util
   build-depends:       base ==4.*
                      , bound
                      , containers >= 0.5
