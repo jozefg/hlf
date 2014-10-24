@@ -19,27 +19,25 @@ typeTerm i t = do
      Lam body argTy -> typeLam i body argTy
      f :@: a -> typeApp i f a
      Pi ty body -> typePi i ty body
-     When r l -> assert [isType i $ nf l, isType i $ nf r] Star
+     When r l -> assert [isType i l, isType i r] Star
 
 typeLam :: Int -> Scope () Term Fresh -> Term Fresh -> TyM (Term Fresh)
 typeLam i body argTy = do
-  let argTy' = nf argTy
-  resultTy <- bind i argTy' $ typeTerm (i + 1) (unBind i body)
+  resultTy <- bind i argTy $ typeTerm (i + 1) (unBind i body)
   return $ Pi argTy (abstract1 (Unbound i) resultTy)
 
 typeApp :: Int -> Term Fresh -> Term Fresh -> TyM (Term Fresh)
 typeApp i f a = typeTerm i f >>= \case
   Pi ty retTy ->
-    assert [checkTerm i a $ nf ty] (instantiate1 (nf a) retTy)
-  When r l ->
-    assert [checkTerm i a $ nf l] (nf r)
+    assert [checkTerm i a ty] (instantiate1 a retTy)
+  When r l -> assert [checkTerm i a l] r
   ty -> do
     argTy <- typeTerm i a
     typeError ty (argTy --> Var (Unbound i))
 
 typePi :: Int -> Term Fresh -> Scope () Term Fresh -> TyM (Term Fresh)
 typePi i ty body = assert [ isType i ty
-                          , bind i (nf ty) $ isType (i + 1) (unBind i body)]
+                          , bind i ty $ isType (i + 1) (unBind i body)]
                    Star
 
 checkTerm :: Int -> Term Fresh -> Term Fresh -> TyM ()
@@ -47,7 +45,7 @@ checkTerm i term ty = do
   expr <- addNames term
   local (errorCxt . termExpr .~ Just expr) $ do
     ty' <- typeTerm i term
-    when (nf ty' /= nf ty) $ typeError ty ty'
+    when (ty' /= ty) $ typeError ty ty'
 
 isType :: Int -> Term Fresh -> TyM ()
 isType i ty = checkTerm i ty Star
