@@ -18,7 +18,7 @@ typeArityBound i aMap ty scope = typeArity (i + 1) aMap' term
 
 termArity :: Int -> ArityMap -> Term Fresh -> Int
 termArity i aMap t = case t of
-  Lam scope ty -> 1 + termArityBound i aMap ty scope
+  Lam scope ty -> termArityBound i aMap ty scope
   Var a -> aMap M.! a
   l :@: _ -> termArity i aMap l - 1
   When{} -> 0

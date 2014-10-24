@@ -7,7 +7,6 @@ import Language.HLF.AST
 import Language.HLF.Error
 import Language.HLF.TC.Arity
 import Language.HLF.TC.Util
-import Debug.Trace
 
 isBetaNormal :: Term Fresh -> TyM ()
 isBetaNormal = go 0
@@ -48,7 +47,6 @@ checkArityBound i ty scope = do
 checkArity :: Int -> Term Fresh -> TyM ()
 checkArity j t = do
   a <- arityM t
-  view arityMap >>= traceShowM
   when (a /= 0) $ etaError t a
   checkEverywhere j t
   where checkEverywhere _ Star = return ()
