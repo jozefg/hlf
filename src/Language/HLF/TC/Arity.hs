@@ -15,7 +15,7 @@ typeArityBound i aMap ty scope = typeArity (i + 1) aMap' term
   where term = instantiate1 (Var $ Unbound i) scope
         aMap' = M.insert (Unbound i) (typeArity i aMap ty) aMap
 
-
+-- See note 2
 termArity :: Int -> ArityMap -> Term Fresh -> Int
 termArity i aMap t = case t of
   Lam scope ty -> termArityBound i aMap ty scope -- See Note 1
@@ -25,6 +25,7 @@ termArity i aMap t = case t of
   Pi{} -> 0
   Star -> 0
 
+-- See note 2
 typeArity :: Int -> ArityMap -> Term Fresh -> Int
 typeArity i aMap t = case t of
   When _ l -> 1 + typeArity i aMap l
@@ -50,3 +51,10 @@ buildArityMap = foldl' build M.empty . M.toList
 -- leaves me with a bad taste in my mouth even though I'm reasonably
 -- certain I'm correct. I guess this is more apology letter than
 -- comment.
+
+-- Note 2: To clarify the difference between these. `typeArity` takes
+-- a term representing a type and returns a number representing the
+-- number of arguments a value of that type would take. `termArity`
+-- takes a term representing a value and says how many arguments are
+-- "left" so to speak for such a type. If the latter number is not
+-- zero, then we've got a problem.
