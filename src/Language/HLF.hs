@@ -9,4 +9,4 @@ import Language.HLF.TC
 import Control.Monad
 
 typeCheck :: Program -> Either HLFError ()
-typeCheck = bindEnv >=> uncurry typeProgram
+typeCheck = processInput >=> uncurry typeProgram
