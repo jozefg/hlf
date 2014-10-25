@@ -7,21 +7,21 @@ import Language.HLF
 -- All terms need to be eta long. That is, we're only concerned with
 -- typechecking canonical terms. Life is better this way, trust me.
 notEtaLong :: Program
-notEtaLong = Env [ "unit" := Star
-                 , "tt" := "unit"
-                 , "other" := Star
-                 , "ott" := "other"
-                 , "notEta" := lam "x" "ott" "unit" :@: "tt" ]
+notEtaLong = [ TypeFamily ("unit" := Star)
+               ["tt" := "unit"]
+             , TypeFamily ("other" := Star)
+               [ "ott" := "other"
+               , "notEta" := lam "x" "ott" "unit" :@: "tt" ]]
 
 
 -- No matter the type system, void /= unit.
 typeMismatch :: Program
-typeMismatch = Env [ "unit" := Star
-                   , "tt" := "unit"
-                   , "void" := Star
-                   , "foo" := "void" --> Star
-                   , "bar" := "foo" :@: "tt"]
+typeMismatch = [ TypeFamily ("unit" := Star)
+                 ["tt" := "unit"]
+               , TypeFamily ("void" := Star) []
+               , TypeFamily ("foo" := "void" --> Star)
+                 ["bar" := "foo" :@: "tt"]]
 
 -- Unbound variables are also a no-no.
 unboundVars :: Program
-unboundVars = Env ["foo" := "bar"]
+unboundVars = [TypeFamily ("foo" := "bar") []]
