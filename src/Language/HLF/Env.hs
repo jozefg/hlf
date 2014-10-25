@@ -23,8 +23,10 @@ type Program = [TypeFamily Name]
 endsIn :: Eq a => a -> Term a -> Bool
 endsIn name = go . fmap (== name)
   where go t = case t of
-          When (Var isName) _ -> isName
+          Var isName -> isName
+          When r _ -> go r
           Var isName :@: _ -> isName
+          f@(_ :@: _) :@: _ -> go f
           Pi _ body -> go (instantiate1 (Var False) body)
           _ -> False
 
