@@ -12,7 +12,7 @@ import           Language.HLF.AST
 import           Language.HLF.Error
 
 data Definition a = (:=) { defName :: Name
-                         , defTy   :: Term Name }
+                         , defTy   :: Term a }
                   deriving(Show)
 infixr 0 :=
 
@@ -33,7 +33,7 @@ endsIn name = go . fmap (== name)
           Pi _ body -> go (instantiate1 (Var False) body)
           _ -> False
 
-checkTypeFam :: Name -> [Definition a] -> ContextM ()
+checkTypeFam :: Name -> [Definition Name] -> ContextM ()
 checkTypeFam name constrs = mapM_ checkConstr constrs
   where checkConstr (constrName := term) =
           local (termName .~ Just constrName) $
