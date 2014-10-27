@@ -16,8 +16,8 @@ data Definition a = (:=) { defName :: Name
                   deriving(Show)
 infixr 0 :=
 
-data TypeFamily a = TypeFamily { tyFam   :: Definition a
-                               , constrs :: [Definition a]}
+data TypeFamily a = TypeFamily { tyFamSig     :: Definition a
+                               , tyFamConstrs :: [Definition a]}
 type Program = [TypeFamily Name]
 
 endsIn :: Eq a => a -> Term a -> Bool
