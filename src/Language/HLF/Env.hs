@@ -40,8 +40,9 @@ checkTypeFam name constrs = mapM_ checkConstr constrs
           local (termExpr .~ Just term) $
             when (not $ endsIn name term) $ hlfError (EnvError NotAConstr)
 
-flattenTypeFam :: TopLevel a -> Env a
-flattenTypeFam (TypeFamily ty constrs) = Env (ty : constrs)
+flattenToplevel :: TopLevel a -> Env a
+flattenToplevel (TypeFamily ty constrs) = Env (ty : constrs)
+flattenToplevel _ = Env []
 
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
@@ -70,7 +71,7 @@ bindEnv (Env env) = (,) symMap <$> foldr bindTy (return M.empty) env
 processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
 processInput fams = flip runReaderT info $ do
   mapM_ check fams
-  bindEnv $ F.foldMap flattenTypeFam fams
+  bindEnv $ F.foldMap flattenToplevel fams
   where info = ErrorContext EnvironmentChecking Nothing Nothing
         check (TypeFamily (name := _) constrs) = checkTypeFam name constrs
         check _ = return ()
