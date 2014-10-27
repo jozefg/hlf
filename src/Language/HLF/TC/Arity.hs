@@ -27,9 +27,9 @@ typeArity i aMap t = case t of
   When _ l -> 1 + typeArity i aMap l
   Pi ty scope -> 1 + arityBound typeArity i aMap ty scope
   Var a -> aMap M.! a
+  Star -> 0
   Lam{} -> 0
   _ :@: _ -> 0
-  Star -> 0
 
 buildArityMap :: Context -> ArityMap
 buildArityMap = foldl' build M.empty . M.toList
