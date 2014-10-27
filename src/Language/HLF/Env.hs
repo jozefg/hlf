@@ -10,7 +10,6 @@ import           Control.Lens         hiding (Context)
 import           Control.Monad.Reader
 import qualified Data.Foldable        as F
 import qualified Data.Map             as M
-import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Set             as S
 import qualified Data.Traversable     as T
