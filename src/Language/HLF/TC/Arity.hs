@@ -5,20 +5,16 @@ import qualified Data.Map             as M
 import           Language.HLF.AST
 import           Language.HLF.TC.Util
 
-termArityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
-termArityBound i aMap ty scope = termArity (i + 1) aMap' term
-  where term = instantiate1 (Var $ Unbound i) scope
-        aMap' = M.insert (Unbound i) (typeArity i aMap ty) aMap
-
-typeArityBound :: Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
-typeArityBound i aMap ty scope = typeArity (i + 1) aMap' term
+arityBound :: (Int -> ArityMap -> Term Fresh -> Int)
+                  -> Int -> ArityMap -> Term Fresh -> Scope () Term Fresh -> Int
+arityBound f i aMap ty scope = f (i + 1) aMap' term
   where term = instantiate1 (Var $ Unbound i) scope
         aMap' = M.insert (Unbound i) (typeArity i aMap ty) aMap
 
 -- See note 2
 termArity :: Int -> ArityMap -> Term Fresh -> Int
 termArity i aMap t = case t of
-  Lam scope ty -> termArityBound i aMap ty scope -- See Note 1
+  Lam scope ty -> arityBound termArity i aMap ty scope -- See Note 1
   Var a -> aMap M.! a
   l :@: _ -> termArity i aMap l - 1
   When{} -> 0
@@ -29,7 +25,7 @@ termArity i aMap t = case t of
 typeArity :: Int -> ArityMap -> Term Fresh -> Int
 typeArity i aMap t = case t of
   When _ l -> 1 + typeArity i aMap l
-  Pi ty scope -> 1 + typeArityBound i aMap ty scope
+  Pi ty scope -> 1 + arityBound typeArity i aMap ty scope
   Var a -> aMap M.! a
   Lam{} -> 0
   _ :@: _ -> 0
