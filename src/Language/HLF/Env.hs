@@ -12,6 +12,7 @@ import qualified Data.Foldable        as F
 import qualified Data.Map             as M
 import           Data.Maybe
 import           Data.Monoid
+import qualified Data.Set             as S
 import qualified Data.Traversable     as T
 import           Language.HLF.AST
 import           Language.HLF.Error
@@ -63,15 +64,11 @@ newtype Env a = Env {unEnv :: [Definition a]}
 flipAList :: [(a, b)] -> [(b, a)] -- A is short for association, not the article
 flipAList = map $ \(a, b) -> (b, a)
 
-topName :: TopLevel a -> Maybe a
-topName (TypeFamily (name := _) _)= Just name
-topName _ = Nothing
-
 bindTop :: [TopLevel Name] -> ContextM (M.Map Fresh Name, [TopLevel Fresh])
 bindTop tops = (,) symMap <$> mapM bindNames tops
-  where names = zip (mapMaybe topName tops) (map Free [0..])
-        nameMap = M.fromList names
-        symMap = M.fromList $ flipAList names
+  where names = F.toList $ F.foldMap (F.foldMap S.singleton) tops
+        nameMap = M.fromList $ zip names (map Free [0..])
+        symMap = M.fromList $ zip (map Free [0..]) names
         bindNames = T.traverse (flip lookupName nameMap)
 
 bindProgram :: Program -> ErrorM (M.Map Fresh Name, [TopLevel Fresh])
