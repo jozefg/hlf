@@ -27,10 +27,10 @@ isBetaNormal = go 0
              ap@(_ :@: _) -> betaError ap
 
 arityM :: Term Fresh -> TyM Int
-arityM t = termArity 0 <$> view arityMap <*> return t
+arityM t = termArity 0 t <$> view arityMap
 
 tyArityM :: Term Fresh -> TyM Int
-tyArityM t = typeArity 0 <$> view arityMap <*> return t
+tyArityM t = typeArity 0 t <$> view arityMap
 
 checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
 checkArityBound i ty scope = do
