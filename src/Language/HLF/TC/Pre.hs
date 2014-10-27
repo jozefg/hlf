@@ -41,7 +41,7 @@ checkArityBound ty scope = do
 
 checkArity :: Term Fresh -> GenT Int TyM ()
 checkArity t = do
-  a <- view arityMap >>= runReaderT (termArity t) -- See note 1
+  a <- view arityMap >>= runReaderT (termArity t) -- See note 2
   when (a /= 0) $ lift (etaError t a)
   checkEverywhere t -- See note 1
   where checkEverywhere Star = return ()
@@ -75,3 +75,11 @@ preTC t = isBetaNormal t *> isEtaLong t
 -- :@: r` isn't eta long but is a subexpression. Instead we look into
 -- the subexpression that aren't taken into account for termArity and
 -- poke at those.
+--
+-- Note 2: There's some subtlility in why we must preserve the Gen
+-- monad where in between these calls. Essentially if we don't then
+-- termArity could call arityBound which would clober something in the
+-- existing ArityMap. Since the new arity we've inserted may not be
+-- the same as the old one, catastrophy if that name occurs free in
+-- the term whose arity we're checking. This may seem obvious, but I
+-- got it wrong the first time round so it gets a note.
