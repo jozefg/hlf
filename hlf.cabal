@@ -23,6 +23,7 @@ library
                      , containers >= 0.5
                      , errors
                      , lens >= 3
+                     , monad-gen
                      , mtl >= 2.1
                      , prelude-extras >= 0.4
                      , text >= 1.0.0.0
