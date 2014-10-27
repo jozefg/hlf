@@ -10,7 +10,7 @@ import Language.HLF.TC.Util
 
 typeTerm :: Term Fresh -> GenT Int TyM (Term Fresh)
 typeTerm t = do
-  namedT <- lift $ addNames t
+  namedT <- addNames t
   local (errorCxt . termExpr .~ Just namedT) $
     case t of
      Star -> return Star -- See note 1

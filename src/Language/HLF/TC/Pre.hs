@@ -12,7 +12,7 @@ import Language.HLF.TC.Util
 isBetaNormal :: Term Fresh -> TyM ()
 isBetaNormal t = runGenT (go t)
   where go t = do
-          expr <- lift $ addNames t
+          expr <- addNames t
           local (errorCxt . termExpr .~ Just expr) $
             case t of
              (Var _ :@: a) :@: b -> go a *> go b

@@ -33,7 +33,7 @@ unBind i sc = instantiate1 (Var (Unbound i)) sc
 bind :: MonadReader TypeInfo m => Int -> Term Fresh -> m a -> m a
 bind i term act = local (context . at (Unbound i) .~ Just term) act
 
-nameFor :: Fresh -> TyM Name
+nameFor :: (MonadReader TypeInfo m, Functor m) => Fresh -> m Name
 nameFor i = fromMaybe (fresh2name i) <$> view (nameMap . at i)
 
 lookupVar :: Fresh -> TyM (Term Fresh)
@@ -43,7 +43,8 @@ lookupVar i = do
   magnify errorCxt $
     impossible ("Found unbound symbol " <> name) term
 
-addNames :: Term Fresh -> TyM (Term Name)
+addNames :: (MonadReader TypeInfo m, Applicative m)
+            => Term Fresh -> m (Term Name)
 addNames = traverse nameFor
 
 typeError :: Term Fresh -> Term Fresh -> TyM a
