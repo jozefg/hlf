@@ -62,22 +62,17 @@ newtype Env a = Env {unEnv :: [Definition a]}
 flipAList :: [(a, b)] -> [(b, a)]
 flipAList = map $ \(a, b) -> (b, a)
 
-bindEnv :: Env Name -> ContextM (M.Map Fresh Name, Context)
-bindEnv (Env env) = (,) symMap <$> foldr bindTy (return M.empty) env
-  where names = zip (map defName env) (map Free [0..])
+bindTop :: TopLevel Name -> ContextM (M.Map Fresh Name, TopLevel Fresh)
+bindTop top = (,) symMap <$> T.traverse (flip lookupName nameMap) top
+  where names = zip (F.toList top) (map Free [0..])
         nameMap = M.fromList names
         symMap = M.fromList $ flipAList names
-        bindTy (name := ty) tyMap =
-          local ((termName .~ Just name)
-                 . (termExpr .~ Just ty)) $
-          M.insert <$> lookupName name nameMap
-                   <*> traverse (flip lookupName nameMap) ty
-                   <*> tyMap
 
 processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
 processInput fams = flip runReaderT info $ do
   mapM_ check fams
-  bindEnv $ F.foldMap flattenToplevel fams
+  undefined
+  --  bindEnv $ F.foldMap flattenToplevel fams
   where info = ErrorContext EnvironmentChecking Nothing Nothing
         check (TypeFamily (name := _) constrs) = checkTypeFam name constrs
         check _ = return ()
