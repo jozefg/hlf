@@ -4,7 +4,6 @@ import           Bound
 import           Control.Applicative
 import           Control.Monad       (ap)
 import           Data.Foldable
-import qualified Data.Map            as M
 import           Data.String
 import qualified Data.Text           as T
 import           Data.Traversable
@@ -36,12 +35,9 @@ instance Monad Term where
   (fun :@: a) >>= f = (fun >>= f) :@: (a >>= f)
   Lam l ty >>= f = Lam (l >>>= f) (ty >>= f)
 
-
 data Fresh = Free Int | Unbound Int
            deriving(Eq, Show, Ord)
-type Context = [(Fresh, Term Fresh)]
 type Name = T.Text
-
 
 data Definition a = (:=) { defName :: a
                          , defTy   :: Term a }
@@ -50,32 +46,12 @@ infixr 0 :=
 
 data Polarity = Pos | Neg
               deriving (Show)
-
 data TopLevel a = Mode a [Polarity]
                 | TypeFamily (Definition a) [Definition a]
                 deriving(Show, Functor, Foldable, Traversable)
 
 type Program = [TopLevel Name]
-
-fresh2name :: Fresh -> Name
-fresh2name = T.pack . show
-
-lam :: Eq a => a -> Term a -> Term a -> Term a
-lam a f = Lam (abstract1 a f)
-
-piTy :: Eq a => Term a -> a -> Term a -> Term a
-piTy ty a f = Pi ty (abstract1 a f)
-
-piMany :: Eq a => [(Term a, a)] -> Term a -> Term a
-piMany vars body = Data.Foldable.foldr (uncurry piTy) body vars
-
-(<--) :: Term a -> Term a -> Term a
-(<--) = When
-infixl 0 <--
-
-(-->) :: Term a -> Term a -> Term a
-l --> r = Pi l (abstract (const Nothing) r)
-infixr 0 -->
+type Context = [(Fresh, Term Fresh)]
 
 -- Note 1: This actually needs its own data constructor. The moded
 -- checker (when it actually exists) will work from top to bottom so

@@ -10,6 +10,7 @@ import qualified Data.Foldable        as F
 import qualified Data.Map             as M
 import           Data.Maybe
 import           Data.Monoid
+import qualified Data.Text            as T
 import           Language.HLF.AST
 import           Language.HLF.Error
 
@@ -35,6 +36,7 @@ bind i term act = local (context . at (Unbound i) .~ Just term) act
 
 nameFor :: (MonadReader TypeInfo m, Functor m) => Fresh -> m Name
 nameFor i = fromMaybe (fresh2name i) <$> view (nameMap . at i)
+  where fresh2name = T.pack . show
 
 lookupVar :: Fresh -> TyM (Term Fresh)
 lookupVar i = do
