@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Language.HLF.TC.Util where
@@ -23,13 +24,13 @@ makeLenses ''TypeInfo
 
 type TyM = ReaderT TypeInfo ErrorM
 
-assert :: [TyM a] -> b -> TyM b
+assert :: Monad m => [m a] -> b -> m b
 assert as b = F.sequence_ as >> return b
 
 unBind :: Int -> Scope () Term Fresh -> Term Fresh
 unBind i sc = instantiate1 (Var (Unbound i)) sc
 
-bind :: Int -> Term Fresh -> TyM a -> TyM a
+bind :: MonadReader TypeInfo m => Int -> Term Fresh -> m a -> m a
 bind i term act = local (context . at (Unbound i) .~ Just term) act
 
 nameFor :: Fresh -> TyM Name

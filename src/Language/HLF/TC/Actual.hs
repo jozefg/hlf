@@ -1,52 +1,60 @@
 {-# LANGUAGE LambdaCase #-}
 module Language.HLF.TC.Actual where
-import           Bound
-import           Control.Lens         hiding (Context)
-import           Control.Monad.Reader
-import           Language.HLF.AST
-import           Language.HLF.Error
-import           Language.HLF.TC.Util
+import Bound
+import Control.Lens         hiding (Context)
+import Control.Monad.Gen
+import Control.Monad.Reader
+import Language.HLF.AST
+import Language.HLF.Error
+import Language.HLF.TC.Util
 
-typeTerm :: Int -> Term Fresh -> TyM (Term Fresh)
-typeTerm i t = do
-  namedT <- addNames t
+typeTerm :: Term Fresh -> GenT Int TyM (Term Fresh)
+typeTerm t = do
+  namedT <- lift $ addNames t
   local (errorCxt . termExpr .~ Just namedT) $
     case t of
      Star -> return Star -- See note 1
-     Var j -> lookupVar j
-     Lam body argTy -> typeLam i body argTy
-     f :@: a -> typeApp i f a
-     Pi ty body -> typePi i ty body
-     When r l -> assert [isType i l, isType i r] Star
+     Var j -> lift $ lookupVar j
+     Lam body argTy -> typeLam body argTy
+     f :@: a -> typeApp f a
+     Pi ty body -> typePi ty body
+     When r l -> assert [isType l, isType r] Star
 
-typeLam :: Int -> Scope () Term Fresh -> Term Fresh -> TyM (Term Fresh)
-typeLam i body argTy = do
-  resultTy <- bind i argTy $ typeTerm (i + 1) (unBind i body)
+typeLam :: Scope () Term Fresh -> Term Fresh -> GenT Int TyM (Term Fresh)
+typeLam body argTy = do
+  i <- gen
+  resultTy <- bind i argTy $ typeTerm (unBind i body)
   return $ Pi argTy (abstract1 (Unbound i) resultTy)
 
-typeApp :: Int -> Term Fresh -> Term Fresh -> TyM (Term Fresh)
-typeApp i f a = typeTerm i f >>= \case
+typeApp :: Term Fresh -> Term Fresh -> GenT Int TyM (Term Fresh)
+typeApp f a = typeTerm f >>= \case
   Pi ty retTy ->
-    assert [checkTerm i a ty] (instantiate1 a retTy)
-  When r l -> assert [checkTerm i a l] r
+    assert [checkTerm a ty] (instantiate1 a retTy)
+  When r l -> assert [checkTerm a l] r
   ty -> do
-    argTy <- typeTerm i a
-    typeError ty (argTy --> Var (Unbound i))
+    i <- gen
+    argTy <- typeTerm a
+    lift $ typeError ty (argTy --> Var (Unbound i))
 
-typePi :: Int -> Term Fresh -> Scope () Term Fresh -> TyM (Term Fresh)
-typePi i ty body = assert [ isType i ty
-                          , bind i ty $ isType (i + 1) (unBind i body)]
-                   Star
+typePi :: Term Fresh -> Scope () Term Fresh -> GenT Int TyM (Term Fresh)
+typePi ty body = do
+  i <- gen
+  assert [ isType ty
+         , bind i ty $ isType (unBind i body)]
+    Star
 
-checkTerm :: Int -> Term Fresh -> Term Fresh -> TyM ()
-checkTerm i term ty = do
-  expr <- addNames term
+checkTerm :: Term Fresh -> Term Fresh -> GenT Int TyM ()
+checkTerm term ty = do
+  expr <- lift $ addNames term
   local (errorCxt . termExpr .~ Just expr) $ do
-    ty' <- typeTerm i term
-    when (ty' /= ty) $ typeError ty ty'
+    ty' <- typeTerm term
+    when (ty' /= ty) . lift $ typeError ty ty'
 
-isType :: Int -> Term Fresh -> TyM ()
-isType i ty = checkTerm i ty Star
+isType :: Term Fresh -> GenT Int TyM ()
+isType ty = checkTerm ty Star
+
+check :: Term Fresh -> TyM ()
+check = runGenT . isType
 
 -- Note 1. This looks inconsistent but I don't think it actually
 -- is. Since we don't allow Pi types to be indexed over anything other

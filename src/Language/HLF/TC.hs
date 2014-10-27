@@ -18,4 +18,4 @@ typeProgram nms cxt = flip runReaderT info
           n <- nameFor i
           local (errorCxt . termName .~ Just n) $ do
             preTC term
-            checkTerm 0 term Star
+            check term
