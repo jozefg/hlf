@@ -29,18 +29,10 @@ checkTypeFam name constrs = mapM_ checkConstr constrs
           local (termExpr .~ Just term) $
             when (not $ endsIn name term) $ hlfError (EnvError NotAConstr)
 
-flattenToplevel :: TopLevel a -> Env a
-flattenToplevel (TypeFamily ty constrs) = Env (ty : constrs)
-flattenToplevel _ = Env []
-
-
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name nameMap = case M.lookup name nameMap of
   Just i -> return i
   Nothing -> hlfError (EnvError $ UnboundName name)
-
-newtype Env a = Env {unEnv :: [Definition a]}
-              deriving(Monoid)
 
 bindTop :: [TopLevel Name] -> ContextM (M.Map Fresh Name, [TopLevel Fresh])
 bindTop tops = (,) symMap <$> mapM bindNames tops
@@ -57,7 +49,11 @@ bindProgram tops = flip runReaderT info $ do
         check (TypeFamily (name := _) constrs) = checkTypeFam name constrs
         check _ = return ()
 
+flattenToplevel :: TopLevel a -> [Definition a]
+flattenToplevel (TypeFamily ty constrs) = ty : constrs
+flattenToplevel _ = []
+
 processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
 processInput tops = fmap (toCxt . F.foldMap flattenToplevel)
                     <$> bindProgram tops
-  where toCxt (Env e) = map (\(name := term) -> (name, term)) e
+  where toCxt = map (\(name := term) -> (name, term))
