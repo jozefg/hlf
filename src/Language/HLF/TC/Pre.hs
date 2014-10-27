@@ -31,23 +31,17 @@ isBetaNormal t = runGenT (go t)
                i <- gen
                go (instantiate1 (Var $ Unbound i) body)
 
-arityM :: Term Fresh -> GenT Int TyM Int
-arityM t = runGenT (termArity t) <$> view arityMap
-
-tyArityM :: Term Fresh -> GenT Int TyM Int
-tyArityM t = runGenT (typeArity t) <$> view arityMap
-
 checkArityBound :: Term Fresh -> Scope () Term Fresh -> GenT Int TyM ()
 checkArityBound ty scope = do
   checkArity ty
-  tyAr <- tyArityM ty
+  tyAr <- runGenT (typeArity ty) <$> view arityMap
   i <- gen
   local (arityMap . at (Unbound i) .~ Just tyAr) $
     checkArity (instantiate1 (Var $ Unbound i) scope)
 
 checkArity :: Term Fresh -> GenT Int TyM ()
 checkArity t = do
-  a <- arityM t
+  a <- runGenT (termArity t) <$> view arityMap
   when (a /= 0) $ lift (etaError t a)
   checkEverywhere t -- See note 1
   where checkEverywhere Star = return ()
