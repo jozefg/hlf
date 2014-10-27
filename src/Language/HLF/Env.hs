@@ -8,14 +8,15 @@ import           Bound
 import           Control.Applicative
 import           Control.Lens         hiding (Context)
 import           Control.Monad.Reader
-import qualified Data.Map             as M
 import qualified Data.Foldable        as F
+import qualified Data.Map             as M
+import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Traversable     as T
 import           Language.HLF.AST
 import           Language.HLF.Error
 
-data Definition a = (:=) { defName :: Name
+data Definition a = (:=) { defName :: a
                          , defTy   :: Term a }
                   deriving(Show, Functor, F.Foldable, T.Traversable)
 infixr 0 :=
@@ -62,17 +63,24 @@ newtype Env a = Env {unEnv :: [Definition a]}
 flipAList :: [(a, b)] -> [(b, a)] -- A is short for association, not the article
 flipAList = map $ \(a, b) -> (b, a)
 
-bindTop :: TopLevel Name -> ContextM (M.Map Fresh Name, TopLevel Fresh)
-bindTop top = (,) symMap <$> T.traverse (flip lookupName nameMap) top
-  where names = zip (F.toList top) (map Free [0..])
+topName :: TopLevel a -> Maybe a
+topName (TypeFamily (name := _) _)= Just name
+topName _ = Nothing
+
+bindTop :: [TopLevel Name] -> ContextM (M.Map Fresh Name, [TopLevel Fresh])
+bindTop tops = (,) symMap <$> mapM bindNames tops
+  where names = zip (mapMaybe topName tops) (map Free [0..])
         nameMap = M.fromList names
         symMap = M.fromList $ flipAList names
+        bindNames = T.traverse (flip lookupName nameMap)
 
-processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
-processInput fams = flip runReaderT info $ do
-  mapM_ check fams
-  undefined
-  --  bindEnv $ F.foldMap flattenToplevel fams
+bindProgram :: Program -> ErrorM (M.Map Fresh Name, [TopLevel Fresh])
+bindProgram tops = flip runReaderT info $ do
+  mapM_ check tops
+  bindTop tops
   where info = ErrorContext EnvironmentChecking Nothing Nothing
         check (TypeFamily (name := _) constrs) = checkTypeFam name constrs
         check _ = return ()
+
+processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
+processInput tops = undefined
