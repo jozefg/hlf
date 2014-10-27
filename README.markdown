@@ -15,4 +15,3 @@ For building, all you need to do is the usual
 And then you can tinker around with toy examples.
 
 [twelf]: http://twelf.org
-[bitbucket]: http://bitbucket.org/jozefg/hlf
