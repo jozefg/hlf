@@ -43,7 +43,7 @@ checkArity :: Int -> Term Fresh -> TyM ()
 checkArity j t = do
   a <- arityM t
   when (a /= 0) $ etaError t a
-  checkEverywhere j t
+  checkEverywhere j t -- See note 1
   where checkEverywhere _ Star = return ()
         checkEverywhere i (Pi ty body) = checkArityBound i ty body
         checkEverywhere i (Lam _ ty) = checkArity i ty
@@ -57,3 +57,21 @@ isEtaLong = checkArity 0
 
 preTC :: Term Fresh -> TyM ()
 preTC t = isBetaNormal t *> isEtaLong t
+
+-- Note 1: checkEverywhere makes me unhappy. Basically when we're
+-- looking at some expression and trying assert that it's eta-long, we
+-- need to ensure to things.
+--
+--  1. The top level structure is eta-long
+--  2. Each "sub node" is eta long
+--
+-- It's quite easy to check that the toplevel structure is
+-- eta-long. All we need to is say "hey termArity, are you zero?" and
+-- complain loudly if this is not so. Checking each subnode is
+-- tricky. Essentially we need to poke around each subexpression and
+-- do what we did at the toplevel, however, we can do this naivly. If
+-- we just look in at each subexpression and call termArity we'll find
+-- that this complains about something like `l :@: r :@: z` since `l
+-- :@: r` isn't eta long but is a subexpression. Instead we look into
+-- the subexpression that aren't taken into account for termArity and
+-- poke at those.
