@@ -16,9 +16,12 @@ data Definition a = (:=) { defName :: Name
                   deriving(Show)
 infixr 0 :=
 
-data TypeFamily a = TypeFamily { tyFamSig     :: Definition a
-                               , tyFamConstrs :: [Definition a]}
-type Program = [TypeFamily Name]
+data Polarity = Pos | Neg
+
+data TopLevel a = Mode a [Polarity]
+                | TypeFamily (Definition a) [Definition a]
+
+type Program = [TopLevel Name]
 
 endsIn :: Eq a => a -> Term a -> Bool
 endsIn name = go . fmap (== name)
@@ -30,15 +33,16 @@ endsIn name = go . fmap (== name)
           Pi _ body -> go (instantiate1 (Var False) body)
           _ -> False
 
-checkTypeFam :: TypeFamily Name -> ContextM ()
-checkTypeFam (TypeFamily (name := _) constrs) = mapM_ checkConstr constrs
+checkTypeFam :: Name -> [Definition a] -> ContextM ()
+checkTypeFam name constrs = mapM_ checkConstr constrs
   where checkConstr (constrName := term) =
           local (termName .~ Just constrName) $
           local (termExpr .~ Just term) $
             when (not $ endsIn name term) $ hlfError (EnvError NotAConstr)
 
-flattenTypeFam :: TypeFamily a -> Env a
+flattenTypeFam :: TopLevel a -> Env a
 flattenTypeFam (TypeFamily ty constrs) = Env (ty : constrs)
+
 
 lookupName :: Name -> M.Map Name Fresh -> ContextM Fresh
 lookupName name nameMap = case M.lookup name nameMap of
@@ -65,6 +69,8 @@ bindEnv (Env env) = (,) symMap <$> foldr bindTy (return M.empty) env
 
 processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
 processInput fams = flip runReaderT info $ do
-  mapM_ checkTypeFam fams
+  mapM_ check fams
   bindEnv $ F.foldMap flattenTypeFam fams
   where info = ErrorContext EnvironmentChecking Nothing Nothing
+        check (TypeFamily (name := _) constrs) = checkTypeFam name constrs
+        check _ = return ()
