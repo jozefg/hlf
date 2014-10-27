@@ -19,7 +19,7 @@ type ArityMap = M.Map Fresh Int
 data TypeInfo = TypeInfo { _nameMap  :: NameMap
                          , _arityMap :: ArityMap
                          , _errorCxt :: ErrorContext
-                         , _context  :: Context }
+                         , _context  :: M.Map Fresh (Term Fresh) }
 makeLenses ''TypeInfo
 
 type TyM = ReaderT TypeInfo ErrorM

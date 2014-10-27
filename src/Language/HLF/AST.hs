@@ -39,7 +39,7 @@ instance Monad Term where
 
 data Fresh = Free Int | Unbound Int
            deriving(Eq, Show, Ord)
-type Context = M.Map Fresh (Term Fresh)
+type Context = [(Fresh, Term Fresh)]
 type Name = T.Text
 
 

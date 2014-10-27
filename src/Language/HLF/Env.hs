@@ -58,5 +58,6 @@ bindProgram tops = flip runReaderT info $ do
         check _ = return ()
 
 processInput :: Program -> ErrorM (M.Map Fresh Name, Context)
-processInput tops = fmap (toMap . F.foldMap flattenToplevel) <$> bindProgram tops
-  where toMap = M.fromList . map (\(name := term) -> (name, term)) . unEnv
+processInput tops = fmap (toCxt . F.foldMap flattenToplevel)
+                    <$> bindProgram tops
+  where toCxt (Env e) = map (\(name := term) -> (name, term)) e

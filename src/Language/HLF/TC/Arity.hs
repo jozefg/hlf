@@ -43,7 +43,7 @@ typeArity t = case t of
   _ :@: _ -> return 0
 
 buildArityMap :: Context -> ArityMap
-buildArityMap = foldl' build M.empty . M.toList
+buildArityMap = foldl' build M.empty
   where build aMap (i, term) = M.insert i (runGenT (typeArity term) aMap) aMap
 
 -- Note 1: It's not entirely obvious why we can disregard the addition
