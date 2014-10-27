@@ -31,33 +31,34 @@ isBetaNormal t = runGenT (go t)
                i <- gen
                go (instantiate1 (Var $ Unbound i) body)
 
-arityM :: Term Fresh -> TyM Int
+arityM :: Term Fresh -> GenT Int TyM Int
 arityM t = runGenT (termArity t) <$> view arityMap
 
-tyArityM :: Term Fresh -> TyM Int
+tyArityM :: Term Fresh -> GenT Int TyM Int
 tyArityM t = runGenT (typeArity t) <$> view arityMap
 
-checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
-checkArityBound i ty scope = do
-  checkArity i ty
+checkArityBound :: Term Fresh -> Scope () Term Fresh -> GenT Int TyM ()
+checkArityBound ty scope = do
+  checkArity ty
   tyAr <- tyArityM ty
+  i <- gen
   local (arityMap . at (Unbound i) .~ Just tyAr) $
-   checkArity (i + 1) (instantiate1 (Var $ Unbound i) scope)
+    checkArity (instantiate1 (Var $ Unbound i) scope)
 
-checkArity :: Int -> Term Fresh -> TyM ()
-checkArity j t = do
+checkArity :: Term Fresh -> GenT Int TyM ()
+checkArity t = do
   a <- arityM t
-  when (a /= 0) $ etaError t a
-  checkEverywhere j t -- See note 1
-  where checkEverywhere _ Star = return ()
-        checkEverywhere i (Pi ty body) = checkArityBound i ty body
-        checkEverywhere i (Lam _ ty) = checkArity i ty
-        checkEverywhere i (When r l) = checkArity i l *> checkArity i r
-        checkEverywhere _ Var{} = return ()
-        checkEverywhere i (_ :@: r) = checkArity i r
+  when (a /= 0) $ lift (etaError t a)
+  checkEverywhere t -- See note 1
+  where checkEverywhere Star = return ()
+        checkEverywhere (Pi ty body) = checkArityBound ty body
+        checkEverywhere (Lam _ ty) = checkArity ty
+        checkEverywhere (When r l) = checkArity l *> checkArity r
+        checkEverywhere Var{} = return ()
+        checkEverywhere (_ :@: r) = checkArity r
 
 isEtaLong :: Term Fresh -> TyM ()
-isEtaLong = checkArity 0
+isEtaLong = runGenT . checkArity
 
 
 preTC :: Term Fresh -> TyM ()
