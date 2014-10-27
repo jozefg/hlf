@@ -2,6 +2,7 @@ module Language.HLF.TC.Pre where
 import Bound
 import Control.Applicative
 import Control.Lens
+import Control.Monad.Gen
 import Control.Monad.Reader
 import Language.HLF.AST
 import Language.HLF.Error
@@ -27,10 +28,10 @@ isBetaNormal = go 0
              ap@(_ :@: _) -> betaError ap
 
 arityM :: Term Fresh -> TyM Int
-arityM t = termArity 0 t <$> view arityMap
+arityM t = runGenT (termArity t) <$> view arityMap
 
 tyArityM :: Term Fresh -> TyM Int
-tyArityM t = typeArity 0 t <$> view arityMap
+tyArityM t = runGenT (typeArity t) <$> view arityMap
 
 checkArityBound :: Int -> Term Fresh -> Scope () Term Fresh -> TyM ()
 checkArityBound i ty scope = do
