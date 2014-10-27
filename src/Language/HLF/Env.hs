@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Language.HLF.Env where
@@ -8,18 +11,21 @@ import           Control.Monad.Reader
 import qualified Data.Map             as M
 import qualified Data.Foldable        as F
 import           Data.Monoid
+import qualified Data.Traversable     as T
 import           Language.HLF.AST
 import           Language.HLF.Error
 
 data Definition a = (:=) { defName :: Name
                          , defTy   :: Term a }
-                  deriving(Show)
+                  deriving(Show, Functor, F.Foldable, T.Traversable)
 infixr 0 :=
 
 data Polarity = Pos | Neg
+              deriving (Show)
 
 data TopLevel a = Mode a [Polarity]
                 | TypeFamily (Definition a) [Definition a]
+                deriving(Show, Functor, F.Foldable, T.Traversable)
 
 type Program = [TopLevel Name]
 
