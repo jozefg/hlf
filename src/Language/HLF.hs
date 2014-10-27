@@ -2,6 +2,7 @@ module Language.HLF ( typeCheck
                     , module Language.HLF.AST
                     , module Language.HLF.Env
                     , module Language.HLF.Error) where
+import Bound
 import Language.HLF.AST
 import Language.HLF.Env
 import Language.HLF.Error
@@ -18,7 +19,7 @@ piTy :: Eq a => Term a -> a -> Term a -> Term a
 piTy ty a f = Pi ty (abstract1 a f)
 
 piMany :: Eq a => [(Term a, a)] -> Term a -> Term a
-piMany vars body = Data.Foldable.foldr (uncurry piTy) body vars
+piMany vars body = foldr (uncurry piTy) body vars
 
 (<--) :: Term a -> Term a -> Term a
 (<--) = When

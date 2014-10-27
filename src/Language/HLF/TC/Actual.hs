@@ -34,7 +34,7 @@ typeApp f a = typeTerm f >>= \case
   ty -> do
     i <- gen
     argTy <- typeTerm a
-    lift $ typeError ty (argTy --> Var (Unbound i))
+    lift $ typeError ty (Pi argTy (abstract (const Nothing) $ Var (Unbound i)))
 
 typePi :: Term Fresh -> Scope () Term Fresh -> GenT Int TyM (Term Fresh)
 typePi ty body = do
