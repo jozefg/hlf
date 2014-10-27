@@ -59,7 +59,7 @@ lookupName name nameMap = case M.lookup name nameMap of
 newtype Env a = Env {unEnv :: [Definition a]}
               deriving(Monoid)
 
-flipAList :: [(a, b)] -> [(b, a)]
+flipAList :: [(a, b)] -> [(b, a)] -- A is short for association, not the article
 flipAList = map $ \(a, b) -> (b, a)
 
 bindTop :: TopLevel Name -> ContextM (M.Map Fresh Name, TopLevel Fresh)
