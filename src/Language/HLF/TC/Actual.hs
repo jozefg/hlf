@@ -3,7 +3,6 @@ module Language.HLF.TC.Actual where
 import           Bound
 import           Control.Lens         hiding (Context)
 import           Control.Monad.Reader
-import           Data.Monoid
 import           Language.HLF.AST
 import           Language.HLF.Error
 import           Language.HLF.TC.Util
