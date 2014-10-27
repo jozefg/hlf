@@ -10,22 +10,26 @@ import Language.HLF.TC.Arity
 import Language.HLF.TC.Util
 
 isBetaNormal :: Term Fresh -> TyM ()
-isBetaNormal = go 0
-  where go i t = do
-          expr <- addNames t
+isBetaNormal t = runGenT (go t)
+  where go t = do
+          expr <- lift $ addNames t
           local (errorCxt . termExpr .~ Just expr) $
             case t of
-             Pi l scope ->
-               go i l *> go (i + 1) (instantiate1 (Var $ Unbound i) scope)
-             Lam body argTy ->
-               go i argTy *> go (i + 1) (instantiate1 (Var $ Unbound i) body)
-             When r l -> go i r *> go i l
+             (Var _ :@: a) :@: b -> go a *> go b
+             l@(_ :@: _) :@: r -> go l *> go r
+             Var _ :@: r -> go r
+             ap@(_ :@: _) -> lift $ betaError ap
+             When r l -> go r *> go l
              Star -> return ()
              Var _ -> return ()
-             (Var _ :@: a) :@: b -> go i a *> go i b
-             l@(_ :@: _) :@: r -> go i l *> go i r
-             Var _ :@: r -> go i r
-             ap@(_ :@: _) -> betaError ap
+             Pi l scope -> do
+               go l
+               i <- gen
+               go (instantiate1 (Var $ Unbound i) scope)
+             Lam body argTy -> do
+               go argTy
+               i <- gen
+               go (instantiate1 (Var $ Unbound i) body)
 
 arityM :: Term Fresh -> TyM Int
 arityM t = runGenT (termArity t) <$> view arityMap
