@@ -26,11 +26,6 @@ isBetaNormal = go 0
              Var _ :@: r -> go i r
              ap@(_ :@: _) -> betaError ap
 
-appChain :: Term a -> (Term a, [Term a])
-appChain = go []
-  where go chain (l :@: r) = go (r : chain) l
-        go chain l = (l, chain)
-
 arityM :: Term Fresh -> TyM Int
 arityM t = termArity 0 <$> view arityMap <*> return t
 
