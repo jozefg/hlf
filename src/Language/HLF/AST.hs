@@ -42,6 +42,21 @@ data Fresh = Free Int | Unbound Int
 type Context = M.Map Fresh (Term Fresh)
 type Name = T.Text
 
+
+data Definition a = (:=) { defName :: a
+                         , defTy   :: Term a }
+                  deriving(Show, Functor, Foldable, Traversable)
+infixr 0 :=
+
+data Polarity = Pos | Neg
+              deriving (Show)
+
+data TopLevel a = Mode a [Polarity]
+                | TypeFamily (Definition a) [Definition a]
+                deriving(Show, Functor, Foldable, Traversable)
+
+type Program = [TopLevel Name]
+
 fresh2name :: Fresh -> Name
 fresh2name = T.pack . show
 
